@@ -4,4 +4,4 @@ compatibility_date = "2024-08-01"
 
 [[kv_namespaces]]
 binding = "DB"
-id = "" # will be filled after KV creation
+id = "a4c14473d06d4b46844bdaa5ed237bfa" # KV namespace ID

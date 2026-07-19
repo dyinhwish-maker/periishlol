@@ -1,34 +1,27 @@
-const fs = require('fs');
-const path = require('path');
+// database.js — Adapted for Cloudflare Workers (env.DB KV storage) + local Node fallback
 const bcrypt = require('bcryptjs');
 
-const DB_FILE = path.join(__dirname, '..', 'periish_db.json');
-
-// ── Initialize DB ────────────────────────────────────────────────
-function initDb() {
-  if (!fs.existsSync(DB_FILE)) {
-    fs.writeFileSync(DB_FILE, JSON.stringify({ users: [], profiles: {} }, null, 2), 'utf8');
+// ── Read / Write (Async with Cloudflare KV env.DB) ────────────────
+async function readData(env) {
+  if (env && env.DB) {
+    try {
+      const raw = await env.DB.get('periish_db', { type: 'json' });
+      if (raw) return raw;
+    } catch (err) {
+      console.error('KV read error:', err);
+    }
   }
+  // Fallback if no KV / local testing
+  return { users: [], profiles: {} };
 }
 
-// ── Read / Write ─────────────────────────────────────────────────
-function readData() {
-  initDb();
-  try {
-    return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-  } catch (err) {
-    console.error('DB read error, resetting:', err);
-    return { users: [], profiles: {} };
-  }
-}
-
-function writeData(data) {
-  try {
-    const tmp = DB_FILE + '.tmp';
-    fs.writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf8');
-    fs.renameSync(tmp, DB_FILE);
-  } catch (err) {
-    console.error('DB write error:', err);
+async function writeData(env, data) {
+  if (env && env.DB) {
+    try {
+      await env.DB.put('periish_db', JSON.stringify(data));
+    } catch (err) {
+      console.error('KV write error:', err);
+    }
   }
 }
 
@@ -50,8 +43,8 @@ function migrateUser(user) {
 }
 
 // ── Create User ───────────────────────────────────────────────────
-function createUser(username, email, password, handle) {
-  const db = readData();
+async function createUser(env, username, email, password, handle) {
+  const db = await readData(env);
 
   const cleanUsername = username.trim().toLowerCase();
   if (cleanUsername.length < 1 || cleanUsername.length > 20 || !/^[a-zA-Z0-9_.-]+$/.test(cleanUsername)) {
@@ -121,66 +114,66 @@ function createUser(username, email, password, handle) {
     glow_intensity: 1
   };
 
-  writeData(db);
+  await writeData(env, db);
   return newUser;
 }
 
 // ── Lookup helpers ────────────────────────────────────────────────
-function getUserByUsername(username) {
-  const db = readData();
+async function getUserByUsername(env, username) {
+  const db = await readData(env);
   const u = username.trim().toLowerCase();
   const user = db.users.find(x => x.username === u) || null;
   return user ? migrateUser(user) : null;
 }
 
-function getUserByEmail(email) {
-  const db = readData();
+async function getUserByEmail(env, email) {
+  const db = await readData(env);
   const e = email.trim().toLowerCase();
   const user = db.users.find(x => x.email === e) || null;
   return user ? migrateUser(user) : null;
 }
 
-function getUserById(id) {
-  const db = readData();
+async function getUserById(env, id) {
+  const db = await readData(env);
   const user = db.users.find(x => x.id === id) || null;
   return user ? migrateUser(user) : null;
 }
 
-function getUserByDiscordId(discordId) {
-  const db = readData();
+async function getUserByDiscordId(env, discordId) {
+  const db = await readData(env);
   const user = db.users.find(x => x.discord_id === discordId) || null;
   return user ? migrateUser(user) : null;
 }
 
-function getAllUsers() {
-  const db = readData();
+async function getAllUsers(env) {
+  const db = await readData(env);
   return db.users.map(migrateUser);
 }
 
 // ── Role management ───────────────────────────────────────────────
-function setUserRole(userId, role) {
+async function setUserRole(env, userId, role) {
   const valid = ['user', 'premium', 'admin', 'owner'];
   if (!valid.includes(role)) throw new Error('Invalid role.');
-  const db = readData();
+  const db = await readData(env);
   const user = db.users.find(u => u.id === userId);
   if (!user) throw new Error('User not found.');
   user.role = role;
-  writeData(db);
+  await writeData(env, db);
   return migrateUser(user);
 }
 
-function banUser(userId, banned) {
-  const db = readData();
+async function banUser(env, userId, banned) {
+  const db = await readData(env);
   const user = db.users.find(u => u.id === userId);
   if (!user) throw new Error('User not found.');
   user.banned = !!banned;
-  writeData(db);
+  await writeData(env, db);
   return migrateUser(user);
 }
 
 // ── Discord ───────────────────────────────────────────────────────
-function linkDiscord(userId, discordData) {
-  const db = readData();
+async function linkDiscord(env, userId, discordData) {
+  const db = await readData(env);
   const user = db.users.find(u => u.id === userId);
   if (!user) throw new Error('User not found.');
   const existing = db.users.find(u => u.discord_id === discordData.id && u.id !== userId);
@@ -193,29 +186,28 @@ function linkDiscord(userId, discordData) {
     ? `https://cdn.discordapp.com/avatars/${discordData.id}/${discordData.avatar}.png`
     : `https://cdn.discordapp.com/embed/avatars/${parseInt(discordData.id) % 6}.png`;
 
-  writeData(db);
+  await writeData(env, db);
   return migrateUser(user);
 }
 
-function unlinkDiscord(userId) {
-  const db = readData();
+async function unlinkDiscord(env, userId) {
+  const db = await readData(env);
   const user = db.users.find(u => u.id === userId);
   if (!user) throw new Error('User not found.');
   user.discord_id = null; user.discord_username = null;
   user.discord_global_name = null; user.discord_avatar = null;
-  writeData(db);
+  await writeData(env, db);
   return migrateUser(user);
 }
 
 // ── Donations ─────────────────────────────────────────────────────
-function grantDonation(userId, amountCents) {
-  const db = readData();
+async function grantDonation(env, userId, amountCents) {
+  const db = await readData(env);
   const user = db.users.find(u => u.id === userId);
   if (!user) throw new Error('User not found.');
   if (!user.donated_amount) user.donated_amount = 0;
   user.donated_amount += amountCents;
 
-  // Auto-grant donor badge to profile
   if (db.profiles[user.username]) {
     const badges = db.profiles[user.username].badges || [];
     if (!badges.includes('donor')) {
@@ -223,12 +215,12 @@ function grantDonation(userId, amountCents) {
     }
   }
 
-  writeData(db);
+  await writeData(env, db);
   return migrateUser(user);
 }
 
-function getTopDonors(limit = 50) {
-  const db = readData();
+async function getTopDonors(env, limit = 50) {
+  const db = await readData(env);
   return db.users
     .map(migrateUser)
     .filter(u => u.donated_amount > 0)
@@ -265,8 +257,8 @@ const STORE_ITEMS = [
 
 function getStoreItems() { return STORE_ITEMS; }
 
-function purchaseItem(userId, itemId) {
-  const db = readData();
+async function purchaseItem(env, userId, itemId) {
+  const db = await readData(env);
   const user = db.users.find(u => u.id === userId);
   if (!user) throw new Error('User not found.');
 
@@ -279,7 +271,6 @@ function purchaseItem(userId, itemId) {
 
   user.store_purchases.push(itemId);
 
-  // Auto-apply badge purchases to profile
   if (item.category === 'badge' && db.profiles[user.username]) {
     const badgeName = item.id.replace('badge_', '');
     const badges = db.profiles[user.username].badges || [];
@@ -288,30 +279,30 @@ function purchaseItem(userId, itemId) {
     }
   }
 
-  writeData(db);
+  await writeData(env, db);
   return { user: migrateUser(user), item };
 }
 
-function grantItem(userId, itemId) {
-  const db = readData();
+async function grantItem(env, userId, itemId) {
+  const db = await readData(env);
   const user = db.users.find(u => u.id === userId);
   if (!user) throw new Error('User not found.');
   if (!user.store_purchases) user.store_purchases = [];
   if (!user.store_purchases.includes(itemId)) {
     user.store_purchases.push(itemId);
   }
-  writeData(db);
+  await writeData(env, db);
   return migrateUser(user);
 }
 
 // ── Profile ───────────────────────────────────────────────────────
-function getProfileByUsername(username) {
-  const db = readData();
+async function getProfileByUsername(env, username) {
+  const db = await readData(env);
   return db.profiles[username.trim().toLowerCase()] || null;
 }
 
-function saveProfile(userId, profileData) {
-  const db = readData();
+async function saveProfile(env, userId, profileData) {
+  const db = await readData(env);
   const user = db.users.find(u => u.id === userId);
   if (!user) throw new Error('User not found.');
   const profile = db.profiles[user.username];
@@ -336,23 +327,23 @@ function saveProfile(userId, profileData) {
     }
   });
 
-  writeData(db);
+  await writeData(env, db);
   return profile;
 }
 
-function incrementProfileViews(username) {
-  const db = readData();
+async function incrementProfileViews(env, username) {
+  const db = await readData(env);
   const u = username.trim().toLowerCase();
   if (db.profiles[u]) {
     db.profiles[u].views = (db.profiles[u].views || 0) + 1;
-    writeData(db);
+    await writeData(env, db);
     return db.profiles[u].views;
   }
   return 0;
 }
 
-function getAllProfiles() {
-  const db = readData();
+async function getAllProfiles(env) {
+  const db = await readData(env);
   return Object.keys(db.profiles).map(username => ({
     username,
     display_name: db.profiles[username].display_name,
@@ -363,8 +354,8 @@ function getAllProfiles() {
 }
 
 // ── Site Stats (admin) ────────────────────────────────────────────
-function getSiteStats() {
-  const db = readData();
+async function getSiteStats(env) {
+  const db = await readData(env);
   const totalUsers    = db.users.length;
   const totalViews    = Object.values(db.profiles).reduce((s, p) => s + (p.views || 0), 0);
   const totalDonated  = db.users.reduce((s, u) => s + (u.donated_amount || 0), 0);
@@ -373,7 +364,7 @@ function getSiteStats() {
 }
 
 module.exports = {
-  initDb, readData, writeData,
+  readData, writeData,
   createUser, getAllUsers,
   getUserByUsername, getUserByEmail, getUserById, getUserByDiscordId,
   setUserRole, banUser,
