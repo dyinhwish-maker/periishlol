@@ -1,0 +1,193 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "tul",
+      "email": "quinnfair3@gmail.com",
+      "password_hash": "$2a$10$3U13yEVvRvDZG/qhLsLRsOgldsqXmrB4Qf2CmXFe1a30ty2h95AbO",
+      "created_at": "2026-07-19T17:26:38.344Z"
+    },
+    {
+      "id": 101,
+      "username": "ellie",
+      "email": "ellie@mock.lol",
+      "password_hash": "mock_hash",
+      "created_at": "2026-07-19T17:26:38.344Z"
+    },
+    {
+      "id": 102,
+      "username": "astral",
+      "email": "astral@mock.lol",
+      "password_hash": "mock_hash",
+      "created_at": "2026-07-19T17:26:38.344Z"
+    },
+    {
+      "id": 103,
+      "username": "delay",
+      "email": "delay@mock.lol",
+      "password_hash": "mock_hash",
+      "created_at": "2026-07-19T17:26:38.344Z"
+    },
+    {
+      "id": 104,
+      "username": "lunar",
+      "email": "lunar@mock.lol",
+      "password_hash": "mock_hash",
+      "created_at": "2026-07-19T17:26:38.344Z"
+    }
+  ],
+  "profiles": {
+    "tul": {
+      "user_id": 1,
+      "display_name": "tul",
+      "bio": "dev",
+      "avatar_url": "/uploads/mediaFile-1784482086129-369672857.png",
+      "background_url": "",
+      "background_type": "color",
+      "music_url": "",
+      "layout_type": "grid",
+      "universal_theme": "subtle-white",
+      "colors": {
+        "bg_color": "#000000",
+        "card_bg": "rgba(128, 128, 128, 0.7)",
+        "border_color": "rgba(255, 255, 255, 0.05)",
+        "text_color": "#ffffff",
+        "text_muted": "#8a8a8a",
+        "accent_color": "#35fe7e"
+      },
+      "widgets": [
+        {
+          "id": "w_profile",
+          "type": "profile",
+          "x": 0,
+          "y": 0,
+          "w": 6,
+          "h": 2,
+          "title": "Profile info",
+          "content": ""
+        },
+        {
+          "id": "w_links",
+          "type": "links",
+          "x": 0,
+          "y": 2,
+          "w": 6,
+          "h": 2,
+          "title": "Socials",
+          "links": [
+            {
+              "label": "Discord",
+              "url": "https://discord.gg/periish"
+            },
+            {
+              "label": "TikTok",
+              "url": "https://tiktok.com/@periish"
+            }
+          ]
+        }
+      ],
+      "badges": [
+        "early_access"
+      ],
+      "views": 42
+    },
+    "ellie": {
+      "user_id": 101,
+      "display_name": "ellie",
+      "bio": "creative soul - star collector",
+      "avatar_url": "/assets/default_avatar.png",
+      "background_url": "",
+      "background_type": "color",
+      "music_url": "",
+      "layout_type": "split",
+      "universal_theme": "subtle-white",
+      "colors": {
+        "bg_color": "#080808",
+        "card_bg": "rgba(18, 18, 18, 0.7)",
+        "border_color": "rgba(255, 255, 255, 0.05)",
+        "text_color": "#ffffff",
+        "text_muted": "#8a8a8a",
+        "accent_color": "#35fe7e"
+      },
+      "widgets": [],
+      "badges": [
+        "verified",
+        "donor"
+      ],
+      "views": 891572
+    },
+    "astral": {
+      "user_id": 102,
+      "display_name": "a s t r a l",
+      "bio": "lost in cyberspace",
+      "avatar_url": "/assets/default_avatar.png",
+      "background_url": "",
+      "background_type": "color",
+      "music_url": "",
+      "layout_type": "card",
+      "universal_theme": "subtle-white",
+      "colors": {
+        "bg_color": "#080808",
+        "card_bg": "rgba(18, 18, 18, 0.7)",
+        "border_color": "rgba(255, 255, 255, 0.05)",
+        "text_color": "#ffffff",
+        "text_muted": "#8a8a8a",
+        "accent_color": "#35fe7e"
+      },
+      "widgets": [],
+      "badges": [
+        "verified",
+        "early_access"
+      ],
+      "views": 762810
+    },
+    "delay": {
+      "user_id": 103,
+      "display_name": "Delay_d",
+      "bio": "offline permanently",
+      "avatar_url": "/assets/default_avatar.png",
+      "background_url": "",
+      "background_type": "color",
+      "music_url": "",
+      "layout_type": "grid",
+      "universal_theme": "subtle-white",
+      "colors": {
+        "bg_color": "#080808",
+        "card_bg": "rgba(18, 18, 18, 0.7)",
+        "border_color": "rgba(255, 255, 255, 0.05)",
+        "text_color": "#ffffff",
+        "text_muted": "#8a8a8a",
+        "accent_color": "#35fe7e"
+      },
+      "widgets": [],
+      "badges": [
+        "early_access"
+      ],
+      "views": 67281
+    },
+    "lunar": {
+      "user_id": 104,
+      "display_name": "lunar",
+      "bio": "moon gazing",
+      "avatar_url": "/assets/default_avatar.png",
+      "background_url": "",
+      "background_type": "color",
+      "music_url": "",
+      "layout_type": "card",
+      "universal_theme": "subtle-white",
+      "colors": {
+        "bg_color": "#080808",
+        "card_bg": "rgba(18, 18, 18, 0.7)",
+        "border_color": "rgba(255, 255, 255, 0.05)",
+        "text_color": "#ffffff",
+        "text_muted": "#8a8a8a",
+        "accent_color": "#35fe7e"
+      },
+      "widgets": [],
+      "badges": [
+        "early_access"
+      ],
+      "views": 12512
+    }
+  }
+}

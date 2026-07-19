@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard ─ periish.lol</title>
+  <link rel="icon" href="/assets/icons_favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    /* ── Layout ───────────────────────────────────────────────── */
+    .dash-layout {
+      display: flex; min-height: 100vh;
+    }
+
+    /* ── Sidebar ──────────────────────────────────────────────── */
+    .dash-sidebar {
+      width: var(--sidebar-width, 240px);
+      min-width: var(--sidebar-width, 240px);
+      background: rgba(6,6,6,0.97);
+      border-right: 1px solid rgba(255,255,255,0.05);
+      display: flex; flex-direction: column;
+      height: 100vh; position: sticky; top: 0;
+      overflow-y: auto; overflow-x: hidden;
+      z-index: 40;
+    }
+
+    .sidebar-brand {
+      display: flex; align-items: center; gap: 10px;
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      text-decoration: none; color: #fff;
+    }
+    .sidebar-brand img { width: 20px; height: 20px; }
+    .sidebar-brand span { font-size: 14px; font-weight: 700; font-family: 'Unbounded', sans-serif; letter-spacing: -0.02em; }
+
+    /* User chip */
+    .sidebar-user {
+      display: flex; align-items: center; gap: 10px;
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .sidebar-avatar {
+      width: 34px; height: 34px; border-radius: 50%; object-fit: cover;
+      border: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;
+    }
+    .sidebar-user-info { flex: 1; min-width: 0; }
+    .sidebar-user-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-user-handle { font-size: 11px; color: #555; }
+
+    /* Nav items */
+    .sidebar-nav { flex: 1; padding: 12px 10px; display: flex; flex-direction: column; gap: 2px; }
+
+    .sidebar-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; border-radius: 10px;
+      color: var(--text-muted); font-size: 13px; font-weight: 500;
+      cursor: pointer; border: none; background: none;
+      transition: all 0.2s ease; width: 100%; text-align: left;
+      font-family: inherit; text-decoration: none;
+    }
+    .sidebar-item:hover { background: rgba(255,255,255,0.04); color: #ccc; }
+    .sidebar-item.active { background: rgba(255,255,255,0.07); color: #fff; }
+    .sidebar-item svg { flex-shrink: 0; opacity: 0.6; }
+    .sidebar-item.active svg { opacity: 1; }
+
+    .sidebar-section-label {
+      font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+      color: #333; padding: 12px 12px 4px; margin-top: 8px;
+    }
+
+    /* Sidebar footer */
+    .sidebar-footer {
+      padding: 16px 10px;
+      border-top: 1px solid rgba(255,255,255,0.04);
+      display: flex; flex-direction: column; gap: 2px;
+    }
+
+    /* ── Main content ─────────────────────────────────────────── */
+    .dash-main {
+      flex: 1; overflow-y: auto;
+      display: flex; flex-direction: column;
+    }
+
+    /* Top bar */
+    .dash-topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 32px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      background: rgba(5,5,5,0.8);
+      backdrop-filter: blur(10px);
+      position: sticky; top: 0; z-index: 30;
+    }
+    .dash-page-title { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
+    .dash-topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+    /* Tab panels */
+    .tab-panel { display: none; padding: 32px; flex-direction: column; gap: 32px; }
+    .tab-panel.active { display: flex; }
+
+    /* Section headers */
+    .section-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+    }
+    .section-label { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+    /* Cards */
+    .config-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 16px; padding: 24px;
+    }
+    .config-card-title { font-size: 14px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+
+    /* Form groups */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 8px; }
+    .form-label { font-size: 12px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    /* Stats grid */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+    /* Color grid */
+    .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .color-item {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);
+      padding: 10px 12px; border-radius: 10px;
+    }
+    .color-picker { border: none; background: transparent; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; padding: 0; }
+    .color-label { font-size: 12px; font-weight: 500; }
+
+    /* Layout picker */
+    .layout-picker { display: flex; gap: 12px; }
+    .layout-option {
+      flex: 1; border: 1px solid var(--border-color); border-radius: 12px;
+      padding: 16px 12px; text-align: center; cursor: pointer;
+      background: rgba(255,255,255,0.01); transition: all 0.2s ease;
+    }
+    .layout-option:hover { border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.03); }
+    .layout-option.active { border-color: var(--accent-color); background: rgba(53,254,126,0.04); }
+    .layout-option-icon { font-size: 22px; margin-bottom: 6px; }
+    .layout-option-name { font-size: 12px; font-weight: 600; }
+
+    /* Widget list */
+    .widget-list { display: flex; flex-direction: column; gap: 10px; }
+    .widget-item {
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);
+      padding: 12px 16px; border-radius: 12px; transition: border-color 0.2s ease;
+    }
+    .widget-item:hover { border-color: rgba(255,255,255,0.09); }
+    .widget-info { display: flex; flex-direction: column; gap: 3px; }
+    .widget-type { font-size: 13px; font-weight: 600; }
+    .widget-dims { font-size: 11px; color: var(--text-muted); }
+    .widget-controls { display: flex; gap: 4px; }
+
+    /* Modal / link editor */
+    .link-inputs-group {
+      border: 1px solid var(--border-color); padding: 12px; border-radius: 8px;
+      margin-bottom: 8px; position: relative;
+    }
+
+    /* ── Preview pane ─────────────────────────────────────────── */
+    .preview-pane {
+      width: 380px; min-width: 380px;
+      border-left: 1px solid rgba(255,255,255,0.04);
+      background: #020202;
+      display: flex; flex-direction: column;
+      height: 100vh; position: sticky; top: 0;
+    }
+    .preview-topbar {
+      padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.04);
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(10,10,10,0.8);
+    }
+    .preview-label { font-size: 11px; color: #444; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+    .preview-link { font-size: 12px; color: #fff; font-weight: 600; text-decoration: none; }
+    .preview-frame { flex: 1; border: none; background: transparent; }
+
+    /* Analytics placeholder chart */
+    .analytics-chart-placeholder {
+      background: rgba(255,255,255,0.01);
+      border: 1px solid var(--border-color);
+      border-radius: 14px; height: 180px;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 8px; color: #333;
+    }
+
+    /* Discord card (reuse styles from before) */
+    .discord-connect-card {
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(88,101,242,0.06); border: 1px solid rgba(88,101,242,0.18);
+      border-radius: 12px; padding: 14px 16px; transition: all 0.2s;
+    }
+    .discord-connect-card.unlinked { background: rgba(255,255,255,0.02); border-color: var(--border-color); }
+    .discord-user-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(88,101,242,0.4); }
+    .discord-user-info { flex: 1; min-width: 0; }
+    .discord-user-name { font-size: 14px; font-weight: 600; color: #c5ceff; }
+    .discord-user-sub { font-size: 11px; color: #7982b8; display: block; margin-top: 2px; }
+    .btn-discord-link { background: #5865F2; border: none; color: #fff; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; font-family: inherit; }
+    .btn-discord-link:hover { background: #4752c4; }
+    .btn-discord-unlink { background: transparent; border: 1px solid rgba(255,74,74,0.2); color: #ff6060; border-radius: 8px; padding: 7px 12px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+    .btn-discord-unlink:hover { background: rgba(255,74,74,0.08); }
+
+    /* Overlay effect picker */
+    .overlay-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .overlay-option {
+      border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden;
+      cursor: pointer; transition: all 0.2s ease; position: relative;
+    }
+    .overlay-option:hover { border-color: rgba(255,255,255,0.15); }
+    .overlay-option.active { border-color: var(--accent-color); box-shadow: 0 0 12px var(--accent-glow); }
+    .overlay-option img { width: 100%; height: 60px; object-fit: cover; display: block; }
+    .overlay-option-label { font-size: 10px; font-weight: 600; text-align: center; padding: 6px; color: var(--text-muted); }
+
+    /* Store items inside dashboard */
+    .owned-items-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .owned-badge-card {
+      background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);
+      border-radius: 10px; padding: 12px; text-align: center;
+    }
+    .owned-badge-icon { font-size: 20px; margin-bottom: 6px; }
+    .owned-badge-name { font-size: 11px; font-weight: 600; color: #fff; }
+
+    /* Mobile */
+    .mobile-topbar-btn { display: none; }
+
+    @media (max-width: 1200px) { .preview-pane { display: none; } }
+    @media (max-width: 900px) {
+      .dash-sidebar { position: fixed; left: -100%; transition: left 0.3s ease; }
+      .dash-sidebar.open { left: 0; }
+      .dash-main { width: 100%; }
+      .mobile-topbar-btn { display: flex; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .color-grid { grid-template-columns: 1fr 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .owned-items-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .tab-panel { padding: 20px; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .layout-picker { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+<div class="dash-layout">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────────── -->
+  <aside class="dash-sidebar" id="dash-sidebar">
+    <a href="/" class="sidebar-brand">
+      <img src="/assets/logos_logo.svg" alt="Logo">
+      <span>periish.lol</span>
+    </a>
+
+    <!-- User chip -->
+    <div class="sidebar-user">
+      <img src="/assets/default_avatar.png" alt="avatar" class="sidebar-avatar" id="sidebar-avatar">
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name" id="sidebar-name">Loading…</div>
+        <div class="sidebar-user-handle" id="sidebar-handle">@—</div>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Profile</div>
+      <button class="sidebar-item active" data-tab="overview">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        Overview
+      </button>
+      <button class="sidebar-item" data-tab="edit">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+        Edit Profile
+      </button>
+      <button class="sidebar-item" data-tab="widgets">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+        Links & Widgets
+      </button>
+      <button class="sidebar-item" data-tab="style">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5S18.33 12 17.5 12z"/></svg>
+        Style & Theme
+      </button>
+      <button class="sidebar-item" data-tab="analytics">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        Analytics
+      </button>
+
+      <div class="sidebar-section-label" style="margin-top:8px;">Account</div>
+      <button class="sidebar-item" data-tab="store">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4l5 2.18V11c0 3.5-2.33 6.79-5 7.93-2.67-1.14-5-4.43-5-7.93V7.18L12 5z"/></svg>
+        My Badges
+      </button>
+      <button class="sidebar-item" data-tab="settings">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+        Settings
+      </button>
+
+      <div id="admin-nav-item" style="display:none">
+        <div class="sidebar-section-label" style="margin-top:8px;">Admin</div>
+        <a href="/admin" class="sidebar-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+          Admin Panel
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="/shop" class="sidebar-item">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96C5 16.1 6.9 18 9 18h12v-2H9.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63H19c.75 0 1.41-.41 1.75-1.03l3.58-6.49C24.42 6.1 24.17 6 24 6H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+        Shop
+      </a>
+      <button class="sidebar-item" id="logout-btn" style="color: #ff6060;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+        Log Out
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── Main ──────────────────────────────────────────────────── -->
+  <main class="dash-main">
+    <div class="dash-topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="icon-btn mobile-topbar-btn" id="sidebar-toggle">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        </button>
+        <span class="dash-page-title" id="dash-page-title">Overview</span>
+      </div>
+      <div class="dash-topbar-actions">
+        <button class="btn-primary" id="save-btn" style="padding:8px 20px;font-size:13px;">Save Changes</button>
+      </div>
+    </div>
+
+    <!-- ══ OVERVIEW TAB ══════════════════════════════════════════ -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-label">Profile Views</div>
+          <div class="stat-card-value text-glow" id="stat-views">—</div>
+          <div class="stat-card-change">All time</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Widgets</div>
+          <div class="stat-card-value" id="stat-widgets">—</div>
+          <div class="stat-card-change">Active</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Badges</div>
+          <div class="stat-card-value" id="stat-badges">—</div>
+          <div class="stat-card-change">Collected</div>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <div class="config-card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="opacity:.6"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+          Your Profile
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <img id="ov-avatar" src="/assets/default_avatar.png" style="width:56px;height:56px;border-radius:50%;border:2px solid var(--accent-color);object-fit:cover;">
+          <div>
+            <div style="font-size:18px;font-weight:700;" id="ov-name">—</div>
+            <div style="font-size:13px;color:#555;margin-top:2px;" id="ov-handle">@—</div>
+            <a href="#" id="ov-link" target="_blank" style="font-size:12px;color:var(--accent-color);text-decoration:none;margin-top:4px;display:inline-block;">View Profile →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <div class="config-card-title">Quick Actions</div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;">
+          <button class="btn-secondary" onclick="switchTab('edit')" style="font-size:13px;padding:8px 16px;">✏️ Edit Profile</button>
+          <button class="btn-secondary" onclick="switchTab('widgets')" style="font-size:13px;padding:8px 16px;">⚡ Add Widget</button>
+          <button class="btn-secondary" onclick="switchTab('style')" style="font-size:13px;padding:8px 16px;">🎨 Change Theme</button>
+          <a href="/shop" class="btn-secondary" style="font-size:13px;padding:8px 16px;text-decoration:none;">🛒 Visit Shop</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ EDIT PROFILE TAB ══════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-edit">
+      <div class="config-card">
+        <div class="config-card-title">Profile Picture</div>
+        <div style="display:flex;gap:16px;align-items:center;">
+          <img id="avatar-preview" src="/assets/default_avatar.png" style="width:64px;height:64px;border-radius:50%;border:2px solid var(--accent-color);object-fit:cover;">
+          <div>
+            <input type="file" id="avatar-upload" accept="image/*" style="display:none;">
+            <button class="btn-secondary" onclick="document.getElementById('avatar-upload').click()" style="font-size:13px;padding:8px 18px;">Upload Photo</button>
+            <p style="font-size:11px;color:#444;margin-top:6px;">PNG, JPG, GIF up to 8MB</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <div class="config-card-title">Basic Information</div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="form-group">
+            <label class="form-label">Display Name</label>
+            <input type="text" id="profile-display-name" class="input-field" placeholder="Your Display Name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Bio</label>
+            <textarea id="profile-bio" class="input-field" style="min-height:90px;resize:vertical;" placeholder="Tell visitors about yourself…"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <div class="config-card-title">SEO & Metadata</div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="form-group">
+            <label class="form-label">Page Title</label>
+            <input type="text" id="seo-title" class="input-field" placeholder="Custom page title for search engines">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <input type="text" id="seo-description" class="input-field" placeholder="Short description for sharing previews">
+          </div>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <div class="config-card-title">
+          <svg width="16" height="16" viewBox="0 0 71 55" fill="#5865F2"><path d="M60.1 4.9A58.5 58.5 0 0045.7.7a40.7 40.7 0 00-1.8 3.7 54 54 0 00-16.3 0A39.8 39.8 0 0025.9.7 58.4 58.4 0 0011.5 4.9C1.7 19.7-1 34.1.3 48.3a59 59 0 0018 9.1 43.5 43.5 0 003.8-6.2 38.3 38.3 0 01-6-2.9l1.5-1.1a42 42 0 0036.1 0l1.5 1.1a38.3 38.3 0 01-6 2.9 43.5 43.5 0 003.8 6.2 58.8 58.8 0 0018-9.1C72.2 32 68.6 17.7 60.1 4.9zM23.7 39.7c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.5 0 6.4 3.2 6.3 7.2 0 4-2.8 7.2-6.3 7.2zm23.6 0c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.5 0 6.4 3.2 6.3 7.2 0 4-2.8 7.2-6.3 7.2z"/></svg>
+          Discord Account
+        </div>
+        <div id="discord-linked-card" class="discord-connect-card" style="display:none">
+          <img id="discord-linked-avatar" src="" alt="Discord" class="discord-user-avatar">
+          <div class="discord-user-info">
+            <span class="discord-user-name" id="discord-linked-name">—</span>
+            <span class="discord-user-sub">Discord account linked ✓</span>
+          </div>
+          <button class="btn-discord-unlink" id="discord-unlink-btn">Unlink</button>
+        </div>
+        <div id="discord-unlinked-card" class="discord-connect-card unlinked" style="display:none">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;">Connect Discord</div>
+            <div style="font-size:11px;color:#444;margin-top:2px;">Link your Discord account for easy login</div>
+          </div>
+          <button class="btn-discord-link" id="discord-link-btn">Connect</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ WIDGETS TAB ══════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-widgets">
+      <div class="config-card">
+        <div class="config-card-title" style="justify-content:space-between;display:flex;align-items:center;">
+          <span>Widgets</span>
+          <button class="btn-accent" id="add-widget-btn" style="padding:6px 14px;font-size:12px;">+ Add Widget</button>
+        </div>
+        <div class="widget-list" id="widget-list"></div>
+      </div>
+
+      <div class="config-card">
+        <div class="config-card-title">Layout Template</div>
+        <div class="layout-picker">
+          <div class="layout-option" data-layout="card">
+            <div class="layout-option-icon">📇</div>
+            <div class="layout-option-name">Card</div>
+          </div>
+          <div class="layout-option" data-layout="split">
+            <div class="layout-option-icon">🌓</div>
+            <div class="layout-option-name">Split</div>
+          </div>
+          <div class="layout-option" data-layout="grid">
+            <div class="layout-option-icon">▦</div>
+            <div class="layout-option-name">Grid</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <div class="config-card-title">Background Music</div>
+        <div class="form-group">
+          <label class="form-label">SoundCloud / Direct Audio URL</label>
+          <input type="text" id="music-url" class="input-field" placeholder="https://soundcloud.com/...">
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ STYLE TAB ════════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-style">
+      <div class="config-card">
+        <div class="config-card-title">Universal Theme</div>
+        <div class="form-group">
+          <label class="form-label">Theme Preset</label>
+          <select id="theme-select" class="input-field">
+            <option value="subtle-white">Subtle White (default dark, minimal highlights)</option>
+            <option value="fully-dark">Fully Dark (all black, no highlights)</option>
+            <option value="custom">Custom Color (pick your accent)</option>
+          </select>
+        </div>
+        <div id="custom-theme-color-group" style="display:none;margin-top:16px;">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Accent Color</label>
+              <input type="color" id="custom-theme-color" class="input-field" style="height:44px;padding:4px;">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Hex Value</label>
+              <input type="text" id="custom-theme-color-hex" class="input-field" placeholder="#35fe7e">
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:16px;display:flex;flex-direction:column;gap:12px;">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;">
+            <input type="checkbox" id="tilt-effect-checkbox" style="width:16px;height:16px;accent-color:var(--accent-color);">
+            Enable 3D Mouse Tilt Parallax
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;">
+            <input type="checkbox" id="verified-badge-checkbox" style="width:16px;height:16px;accent-color:#35fe7e;">
+            Show Verified Badge
+          </label>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <div class="config-card-title">Background</div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="form-group">
+            <label class="form-label">Background Type</label>
+            <select id="bg-type-select" class="input-field">
+              <option value="color">Solid Color</option>
+              <option value="image">Custom Image / GIF</option>
+            </select>
+          </div>
+          <div id="bg-upload-group" style="display:none;">
+            <label class="form-label">Upload Background</label>
+            <div style="display:flex;gap:12px;align-items:center;margin-top:8px;">
+              <input type="file" id="bg-upload" accept="image/*" style="display:none;">
+              <button class="btn-secondary" onclick="document.getElementById('bg-upload').click()" style="font-size:13px;padding:8px 18px;">Upload File</button>
+              <span id="bg-file-name" style="font-size:12px;color:#444;">No file selected</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <div class="config-card-title">Overlay Effects</div>
+        <div class="overlay-grid">
+          <div class="overlay-option active" data-overlay="" onclick="setOverlay(this, '')">
+            <div style="width:100%;height:60px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center;color:#333;font-size:11px;">None</div>
+            <div class="overlay-option-label">None</div>
+          </div>
+          <div class="overlay-option" data-overlay="/assets/overlays_noise.png" onclick="setOverlay(this, '/assets/overlays_noise.png')">
+            <img src="/assets/overlays_noise.png" alt="Noise">
+            <div class="overlay-option-label">Noise</div>
+          </div>
+          <div class="overlay-option" data-overlay="/assets/overlays_rain.gif" onclick="setOverlay(this, '/assets/overlays_rain.gif')">
+            <img src="/assets/overlays_rain.gif" alt="Rain">
+            <div class="overlay-option-label">Rain</div>
+          </div>
+          <div class="overlay-option" data-overlay="/assets/overlays_cyberpunk.gif" onclick="setOverlay(this, '/assets/overlays_cyberpunk.gif')">
+            <img src="/assets/overlays_cyberpunk.gif" alt="Cyberpunk">
+            <div class="overlay-option-label">Cyberpunk</div>
+          </div>
+          <div class="overlay-option" data-overlay="/assets/overlays_glitch.gif" onclick="setOverlay(this, '/assets/overlays_glitch.gif')">
+            <img src="/assets/overlays_glitch.gif" alt="Glitch">
+            <div class="overlay-option-label">Glitch</div>
+          </div>
+          <div class="overlay-option" data-overlay="/assets/overlays_dots.png" onclick="setOverlay(this, '/assets/overlays_dots.png')">
+            <img src="/assets/overlays_dots.png" alt="Dots">
+            <div class="overlay-option-label">Dots</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <div class="config-card-title">Color Palette</div>
+        <div class="color-grid">
+          <div class="color-item"><input type="color" id="col-bg" class="color-picker"><span class="color-label">Background</span></div>
+          <div class="color-item"><input type="color" id="col-card" class="color-picker"><span class="color-label">Card Fill</span></div>
+          <div class="color-item"><input type="color" id="col-border" class="color-picker"><span class="color-label">Borders</span></div>
+          <div class="color-item"><input type="color" id="col-text" class="color-picker"><span class="color-label">Text</span></div>
+          <div class="color-item"><input type="color" id="col-text-muted" class="color-picker"><span class="color-label">Muted Text</span></div>
+          <div class="color-item"><input type="color" id="col-accent" class="color-picker"><span class="color-label">Accent</span></div>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <div class="config-card-title">Font</div>
+        <div class="form-group">
+          <label class="form-label">Profile Font</label>
+          <select id="font-select" class="input-field">
+            <option value="Outfit">Outfit (Default)</option>
+            <option value="Inter">Inter</option>
+            <option value="Space Grotesk">Space Grotesk</option>
+            <option value="Unbounded">Unbounded</option>
+            <option value="JetBrains Mono">JetBrains Mono</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ANALYTICS TAB ════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-analytics">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-card-label">Total Views</div><div class="stat-card-value text-glow" id="an-views">—</div></div>
+        <div class="stat-card"><div class="stat-card-label">This Month</div><div class="stat-card-value">—</div><div class="stat-card-change">Coming soon</div></div>
+        <div class="stat-card"><div class="stat-card-label">Leaderboard Rank</div><div class="stat-card-value" id="an-rank">#—</div></div>
+      </div>
+
+      <div class="config-card">
+        <div class="config-card-title">Views Over Time</div>
+        <div class="analytics-chart-placeholder">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="rgba(255,255,255,0.1)"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+          <div style="font-size:13px;">Detailed analytics coming soon</div>
+          <div style="font-size:11px;color:#333;">Upgrade to Pro for full analytics</div>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <div class="config-card-title">Leaderboard Position</div>
+        <div id="lb-position-display" style="color:#555;font-size:14px;">Loading…</div>
+      </div>
+    </div>
+
+    <!-- ══ BADGES TAB ═════════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-store">
+      <div class="config-card">
+        <div class="config-card-title">Your Badges</div>
+        <div class="owned-items-grid" id="owned-badges-grid">
+          <div style="color:#444;font-size:13px;grid-column:1/-1;">Loading…</div>
+        </div>
+      </div>
+      <div class="config-card">
+        <div class="config-card-title" style="justify-content:space-between;display:flex;align-items:center;">
+          <span>Get More Badges</span>
+          <a href="/shop" class="btn-accent" style="text-decoration:none;padding:7px 16px;font-size:13px;">Visit Shop →</a>
+        </div>
+        <p style="font-size:13px;color:#555;">Visit the shop to unlock exclusive badges, effects, and profile upgrades.</p>
+      </div>
+    </div>
+
+    <!-- ══ SETTINGS TAB ══════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-settings">
+      <div class="config-card">
+        <div class="config-card-title">Account Info</div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div><div class="form-label">Username (URL Slug)</div><div style="font-size:14px;font-family:monospace;color:#aaa;margin-top:4px;" id="set-username">—</div></div>
+          <div><div class="form-label">Handle</div><div style="font-size:14px;color:#aaa;margin-top:4px;" id="set-handle">—</div></div>
+          <div><div class="form-label">Email</div><div style="font-size:14px;color:#aaa;margin-top:4px;" id="set-email">—</div></div>
+          <div><div class="form-label">Role</div><div id="set-role" style="margin-top:4px;"></div></div>
+        </div>
+      </div>
+
+      <div class="config-card" style="border-color:rgba(255,74,74,0.2);">
+        <div class="config-card-title" style="color:#ff6060;">Danger Zone</div>
+        <p style="font-size:13px;color:#555;margin-bottom:16px;">Actions here are permanent. Please be careful.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn-danger" onclick="confirmLogout()" style="font-size:13px;padding:8px 16px;">Log Out</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ── Preview pane ─────────────────────────────────────────── -->
+  <aside class="preview-pane">
+    <div class="preview-topbar">
+      <span class="preview-label">Live Preview</span>
+      <a href="#" id="preview-link" target="_blank" class="preview-link">periish.lol/you</a>
+    </div>
+    <iframe id="preview-frame" class="preview-frame" src="about:blank"></iframe>
+  </aside>
+</div>
+
+<!-- Widget modal -->
+<div class="modal" id="widget-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modal-title">Add Widget</h3>
+      <button class="close-modal" id="close-modal">×</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div class="form-group">
+        <label class="form-label">Widget Type</label>
+        <select id="widget-type-select" class="input-field">
+          <option value="profile">Profile Summary</option>
+          <option value="links">Social Links</option>
+          <option value="text">Custom Text</option>
+          <option value="spotify">Spotify Embed</option>
+          <option value="badges">Badge Display</option>
+          <option value="views">View Counter</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Card Title</label>
+        <input type="text" id="widget-title" class="input-field" placeholder="My Links">
+      </div>
+      <div id="config-links" style="display:none;">
+        <label class="form-label" style="display:block;margin-bottom:8px;">Links</label>
+        <div id="links-editor-list"></div>
+        <button class="btn-secondary" id="add-link-input-btn" style="width:100%;margin-top:8px;font-size:13px;">+ Add Link</button>
+      </div>
+      <div id="config-text" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">Content</label>
+          <textarea id="widget-text-body" class="input-field" placeholder="Write something…"></textarea>
+        </div>
+      </div>
+      <div id="config-spotify" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">Spotify Embed URL</label>
+          <input type="text" id="widget-spotify-url" class="input-field" placeholder="https://open.spotify.com/embed/track/...">
+        </div>
+      </div>
+      <button class="btn-accent" id="save-widget-modal-btn" style="width:100%;">Apply Widget</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="status-toast" id="toast">
+  <span id="toast-icon">✔</span>
+  <span id="toast-text">Changes saved!</span>
+</div>
+
+<script src="/js/dashboard.js"></script>
+</body>
+</html>

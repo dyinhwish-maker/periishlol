@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auth ─ periish.lol</title>
+  <meta name="description" content="Sign in or create your periish.lol profile account.">
+  <link rel="icon" href="/assets/icons_favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #030303;
+      --card-bg: rgba(10, 10, 10, 0.75);
+      --border-color: rgba(255, 255, 255, 0.06);
+      --text-color: #ffffff;
+      --text-muted: #666;
+      --accent-color: #ffffff;
+      --discord-color: #5865F2;
+      --discord-hover: #4752c4;
+      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-color);
+      font-family: var(--font-family);
+      color: var(--text-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Ambient grid */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.003) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.003) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Soft glow orbs */
+    .bg-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+    .bg-orb-1 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(88, 101, 242, 0.15) 0%, transparent 70%);
+      top: -100px; left: -100px;
+      animation: floatOrb 18s ease-in-out infinite;
+    }
+    .bg-orb-2 {
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(53, 254, 126, 0.08) 0%, transparent 70%);
+      bottom: -60px; right: -60px;
+      animation: floatOrb 22s ease-in-out infinite reverse;
+    }
+    @keyframes floatOrb {
+      0%, 100% { transform: translate(0,0); }
+      50% { transform: translate(30px, 20px); }
+    }
+
+    .auth-wrapper {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 420px;
+      padding: 24px;
+    }
+
+    .auth-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 40px;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow:
+        0 32px 64px rgba(0,0,0,0.9),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    /* Logo */
+    .logo-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+
+    .logo-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: -0.03em;
+      opacity: 0.85;
+      transition: opacity 0.2s;
+    }
+    .logo-link:hover { opacity: 1; }
+
+    .logo-img {
+      width: 22px;
+      height: 22px;
+    }
+
+    /* Error banner */
+    .error-alert {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,74,74,0.04);
+      border: 1px solid rgba(255,74,74,0.18);
+      color: #ff6060;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 12.5px;
+      margin-bottom: 20px;
+      animation: shake 0.35s ease-in-out;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    /* Discord connected badge */
+    .discord-badge {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      background: rgba(88,101,242,0.08);
+      border: 1px solid rgba(88,101,242,0.25);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 12.5px;
+      margin-bottom: 20px;
+      color: #a5acff;
+    }
+    .discord-badge.show { display: flex; }
+    .discord-badge-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .discord-badge-info { display: flex; flex-direction: column; gap: 1px; flex: 1; }
+    .discord-badge-name { font-weight: 600; font-size: 13px; color: #c5ceff; }
+    .discord-badge-sub { font-size: 11px; color: #7982b8; }
+    .discord-badge-remove {
+      background: none;
+      border: none;
+      color: #7982b8;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: color 0.2s;
+      line-height: 1;
+    }
+    .discord-badge-remove:hover { color: #ff6060; }
+
+    /* Sliding viewport */
+    .form-viewport {
+      overflow: hidden;
+      position: relative;
+      transition: height 0.4s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    .form-slider {
+      display: flex;
+      width: 200%;
+      transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    .form-pane {
+      width: 50%;
+      flex-shrink: 0;
+      padding: 0 2px;
+      opacity: 0;
+      transform: scale(0.97);
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.16,1,0.3,1);
+    }
+    .form-pane.active {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: all;
+    }
+
+    /* Auth header */
+    .auth-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .auth-title {
+      font-size: 21px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: #fff;
+      margin-bottom: 7px;
+    }
+    .auth-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .auth-subtitle a {
+      color: #aaa;
+      text-decoration: none;
+      font-weight: 500;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 1px;
+      transition: all 0.2s;
+    }
+    .auth-subtitle a:hover {
+      color: #fff;
+      border-bottom-color: #fff;
+    }
+
+    /* Form */
+    .form-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .handle-prefix-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .handle-prefix {
+      position: absolute;
+      left: 12px;
+      font-size: 14px;
+      color: #555;
+      pointer-events: none;
+      user-select: none;
+    }
+    .handle-prefix-wrap .auth-input {
+      padding-left: 24px;
+    }
+
+    .auth-input {
+      width: 100%;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 11px 13px;
+      font-size: 14px;
+      color: #fff;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+    }
+    .auth-input::placeholder { color: #333; }
+    .auth-input:focus {
+      border-color: rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.03);
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.03), inset 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 4px 0;
+    }
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.05);
+    }
+    .divider-text {
+      font-size: 11px;
+      color: #444;
+      font-weight: 500;
+    }
+
+    /* Buttons */
+    .btn-submit {
+      width: 100%;
+      background: #fff;
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 4px;
+      font-family: inherit;
+    }
+    .btn-submit:hover { background: #e8e8e8; transform: translateY(-1px); }
+    .btn-submit:active { transform: translateY(0); }
+
+    .btn-discord {
+      width: 100%;
+      background: var(--discord-color);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 11px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      transition: all 0.2s;
+      font-family: inherit;
+      letter-spacing: -0.01em;
+    }
+    .btn-discord:hover { background: var(--discord-hover); transform: translateY(-1px); }
+    .btn-discord:active { transform: translateY(0); }
+    .btn-discord:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-discord svg { flex-shrink: 0; }
+
+    /* Footer */
+    .auth-footer {
+      text-align: center;
+      margin-top: 22px;
+      font-size: 11px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+
+  <div class="auth-wrapper">
+    <div class="auth-card">
+
+      <!-- Logo -->
+      <div class="logo-container">
+        <a href="/" class="logo-link">
+          <img src="/assets/logos_logo.svg" alt="Logo" class="logo-img">
+          <span>periish.lol</span>
+        </a>
+      </div>
+
+      <!-- Error banner -->
+      <div class="error-alert" id="error-banner">
+        <span style="font-size:15px">⚠</span>
+        <span id="error-text">Incorrect credentials.</span>
+      </div>
+
+      <!-- Discord connected badge (shown after Discord OAuth) -->
+      <div class="discord-badge" id="discord-badge">
+        <img src="" alt="Discord avatar" class="discord-badge-avatar" id="discord-badge-avatar">
+        <div class="discord-badge-info">
+          <span class="discord-badge-name" id="discord-badge-name">Connected</span>
+          <span class="discord-badge-sub">Discord linked ✓</span>
+        </div>
+        <button class="discord-badge-remove" id="discord-badge-remove" title="Remove Discord link">×</button>
+      </div>
+
+      <!-- Sliding viewport -->
+      <div class="form-viewport" id="form-viewport">
+        <div class="form-slider" id="form-slider">
+
+          <!-- ── LOGIN PANE ── -->
+          <div id="login-pane" class="form-pane active">
+            <div class="auth-header">
+              <h1 class="auth-title">Welcome back</h1>
+              <p class="auth-subtitle">Don't have an account? <a href="#" id="to-register">Sign up</a></p>
+            </div>
+
+            <form id="login-form" class="form-stack" novalidate>
+              <div class="form-group">
+                <label class="form-label" for="login-username">Username or email</label>
+                <input type="text" id="login-username" class="auth-input" placeholder="you" required autocomplete="username">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="login-password">Password</label>
+                <input type="password" id="login-password" class="auth-input" placeholder="••••••••••••" required autocomplete="current-password">
+              </div>
+
+              <button type="submit" class="btn-submit" id="login-submit-btn">Sign in</button>
+
+              <div class="divider">
+                <div class="divider-line"></div>
+                <span class="divider-text">or</span>
+                <div class="divider-line"></div>
+              </div>
+
+              <button type="button" class="btn-discord" id="login-discord-btn">
+                <svg width="18" height="14" viewBox="0 0 71 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <g clip-path="url(#clip0)">
+                    <path d="M60.1 4.9A58.5 58.5 0 0045.7.7a40.7 40.7 0 00-1.8 3.7 54 54 0 00-16.3 0A39.8 39.8 0 0025.9.7 58.4 58.4 0 0011.5 4.9C1.7 19.7-1 34.1.3 48.3a59 59 0 0018 9.1 43.5 43.5 0 003.8-6.2 38.3 38.3 0 01-6-2.9l1.5-1.1a42 42 0 0036.1 0l1.5 1.1a38.3 38.3 0 01-6 2.9 43.5 43.5 0 003.8 6.2 58.8 58.8 0 0018-9.1C72.2 32 68.6 17.7 60.1 4.9zM23.7 39.7c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.5 0 6.4 3.2 6.3 7.2 0 4-2.8 7.2-6.3 7.2zm23.6 0c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.5 0 6.4 3.2 6.3 7.2 0 4-2.8 7.2-6.3 7.2z" fill="currentColor"/>
+                  </g>
+                  <defs><clipPath id="clip0"><rect width="71" height="55" fill="white"/></clipPath></defs>
+                </svg>
+                Continue with Discord
+              </button>
+            </form>
+          </div>
+
+          <!-- ── REGISTER PANE ── -->
+          <div id="register-pane" class="form-pane">
+            <div class="auth-header">
+              <h1 class="auth-title">Create your profile</h1>
+              <p class="auth-subtitle">Already have an account? <a href="#" id="to-login">Log in</a></p>
+            </div>
+
+            <form id="register-form" class="form-stack" novalidate>
+              <div class="form-group">
+                <label class="form-label" for="register-username">Username <span style="color:#444">(your URL: periish.lol/you)</span></label>
+                <input type="text" id="register-username" class="auth-input" placeholder="you" required autocomplete="username" minlength="1" maxlength="20">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="register-handle">Handle <span style="color:#444">(displayed on your profile)</span></label>
+                <div class="handle-prefix-wrap">
+                  <span class="handle-prefix">@</span>
+                  <input type="text" id="register-handle" class="auth-input" placeholder="yourhandle" autocomplete="nickname" maxlength="32">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="register-email">Email Address</label>
+                <input type="email" id="register-email" class="auth-input" placeholder="you@example.com" required autocomplete="email">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="register-password">Password</label>
+                <input type="password" id="register-password" class="auth-input" placeholder="••••••••••••" required autocomplete="new-password">
+              </div>
+
+              <button type="submit" class="btn-submit" id="register-submit-btn">Create profile</button>
+
+              <div class="divider">
+                <div class="divider-line"></div>
+                <span class="divider-text">or</span>
+                <div class="divider-line"></div>
+              </div>
+
+              <button type="button" class="btn-discord" id="register-discord-btn">
+                <svg width="18" height="14" viewBox="0 0 71 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <g clip-path="url(#clip1)">
+                    <path d="M60.1 4.9A58.5 58.5 0 0045.7.7a40.7 40.7 0 00-1.8 3.7 54 54 0 00-16.3 0A39.8 39.8 0 0025.9.7 58.4 58.4 0 0011.5 4.9C1.7 19.7-1 34.1.3 48.3a59 59 0 0018 9.1 43.5 43.5 0 003.8-6.2 38.3 38.3 0 01-6-2.9l1.5-1.1a42 42 0 0036.1 0l1.5 1.1a38.3 38.3 0 01-6 2.9 43.5 43.5 0 003.8 6.2 58.8 58.8 0 0018-9.1C72.2 32 68.6 17.7 60.1 4.9zM23.7 39.7c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.5 0 6.4 3.2 6.3 7.2 0 4-2.8 7.2-6.3 7.2zm23.6 0c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.5 0 6.4 3.2 6.3 7.2 0 4-2.8 7.2-6.3 7.2z" fill="currentColor"/>
+                  </g>
+                  <defs><clipPath id="clip1"><rect width="71" height="55" fill="white"/></clipPath></defs>
+                </svg>
+                Sign up with Discord
+              </button>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-footer">
+      Secured connection — periish.lol
+    </div>
+  </div>
+
+  <script>
+    // ── DOM refs ───────────────────────────────────────────────────────────────
+    const loginPane       = document.getElementById('login-pane');
+    const registerPane    = document.getElementById('register-pane');
+    const loginForm       = document.getElementById('login-form');
+    const registerForm    = document.getElementById('register-form');
+    const formSlider      = document.getElementById('form-slider');
+    const formViewport    = document.getElementById('form-viewport');
+    const errorBanner     = document.getElementById('error-banner');
+    const errorText       = document.getElementById('error-text');
+    const toRegister      = document.getElementById('to-register');
+    const toLogin         = document.getElementById('to-login');
+    const discordBadge    = document.getElementById('discord-badge');
+    const discordAvatar   = document.getElementById('discord-badge-avatar');
+    const discordName     = document.getElementById('discord-badge-name');
+    const discordRemove   = document.getElementById('discord-badge-remove');
+
+    let pendingDiscord = null;  // Stores discord data returned from OAuth
+
+    // ── URL params ────────────────────────────────────────────────────────────
+    const urlParams   = new URLSearchParams(window.location.search);
+    const initUser    = urlParams.get('username');
+    const discordParam = urlParams.get('discord');  // 'connected'
+    const errorParam  = urlParams.get('error');
+
+    // ── Viewport height adjustment ────────────────────────────────────────────
+    function adjustViewportHeight() {
+      const active = document.querySelector('.form-pane.active');
+      if (active) formViewport.style.height = active.scrollHeight + 'px';
+    }
+
+    // ── Pane switching ────────────────────────────────────────────────────────
+    function switchToRegister() {
+      formSlider.style.transform = 'translateX(-50%)';
+      loginPane.classList.remove('active');
+      registerPane.classList.add('active');
+      setTimeout(adjustViewportHeight, 50);
+      errorBanner.style.display = 'none';
+    }
+
+    function switchToLogin() {
+      formSlider.style.transform = 'translateX(0)';
+      registerPane.classList.remove('active');
+      loginPane.classList.add('active');
+      setTimeout(adjustViewportHeight, 50);
+      errorBanner.style.display = 'none';
+    }
+
+    // ── Error banner ──────────────────────────────────────────────────────────
+    function showError(msg) {
+      errorText.textContent = msg;
+      errorBanner.style.display = 'flex';
+      errorBanner.style.animation = 'none';
+      void errorBanner.offsetHeight; // reflow
+      errorBanner.style.animation = null;
+      setTimeout(adjustViewportHeight, 20);
+    }
+
+    // ── Discord badge ─────────────────────────────────────────────────────────
+    function showDiscordBadge(data) {
+      discordAvatar.src = data.discord_avatar || '';
+      discordName.textContent = data.discord_global_name || data.discord_username || 'Discord User';
+      discordBadge.classList.add('show');
+      setTimeout(adjustViewportHeight, 20);
+    }
+
+    function hideDiscordBadge() {
+      discordBadge.classList.remove('show');
+      pendingDiscord = null;
+      // Clear server-side pending
+      fetch('/api/discord/pending/clear', { method: 'POST' }).catch(() => {});
+      setTimeout(adjustViewportHeight, 20);
+    }
+
+    discordRemove.addEventListener('click', hideDiscordBadge);
+
+    // ── Check for pending Discord after OAuth redirect ─────────────────────────
+    async function checkPendingDiscord() {
+      try {
+        const res = await fetch('/api/discord/pending');
+        const data = await res.json();
+        if (data.pending) {
+          pendingDiscord = data;
+          showDiscordBadge(data);
+
+          // Pre-fill register form with Discord data
+          if (data.discord_username) {
+            const usernameField = document.getElementById('register-username');
+            if (!usernameField.value) {
+              usernameField.value = data.discord_username.toLowerCase().replace(/[^a-z0-9_.-]/g, '').slice(0, 20);
+            }
+            const handleField = document.getElementById('register-handle');
+            if (!handleField.value) {
+              handleField.value = data.discord_global_name || data.discord_username;
+            }
+          }
+          if (data.email) {
+            const emailField = document.getElementById('register-email');
+            if (!emailField.value) emailField.value = data.email;
+          }
+        }
+      } catch (e) { /* ignore */ }
+    }
+
+    // ── Discord buttons ───────────────────────────────────────────────────────
+    async function handleDiscordClick(mode) {
+      // Check if Discord is configured server-side
+      try {
+        const res = await fetch('/api/discord/configured');
+        const data = await res.json();
+        if (!data.configured) {
+          showError('Discord OAuth is not configured on this server. Add CLIENT_ID and CLIENT_SECRET to .env');
+          return;
+        }
+      } catch (e) {
+        showError('Unable to check Discord configuration.');
+        return;
+      }
+      window.location.href = `/auth/discord?mode=${mode}`;
+    }
+
+    document.getElementById('login-discord-btn').addEventListener('click', () => handleDiscordClick('login'));
+    document.getElementById('register-discord-btn').addEventListener('click', () => handleDiscordClick('register'));
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    window.addEventListener('load', async () => {
+      // Handle URL params
+      if (errorParam) {
+        const msgs = {
+          discord_not_configured: 'Discord OAuth is not configured yet.',
+          discord_denied: 'Discord authorization was denied.',
+          discord_token_failed: 'Failed to get Discord token.',
+          discord_user_failed: 'Failed to fetch Discord user info.',
+          discord_error: 'An error occurred with Discord OAuth.'
+        };
+        showError(msgs[errorParam] || 'An error occurred.');
+      }
+
+      if (initUser) {
+        switchToRegister();
+        document.getElementById('register-username').value = initUser.toLowerCase();
+      } else if (discordParam === 'connected') {
+        // Check if we should be on register pane (came from register mode)
+        const mode = document.referrer.includes('register') ? 'register' : 'login';
+        if (mode === 'register') switchToRegister();
+      }
+
+      // Check for pending Discord data regardless (handles both panes)
+      if (discordParam === 'connected') {
+        await checkPendingDiscord();
+        // If pending discord is set and we're on login, check if register makes more sense
+        if (pendingDiscord) {
+          // If came via register link, switch to register
+          const path = window.location.pathname;
+          if (path === '/register') switchToRegister();
+        }
+      }
+
+      adjustViewportHeight();
+    });
+
+    toRegister.addEventListener('click', e => { e.preventDefault(); switchToRegister(); });
+    toLogin.addEventListener('click', e => { e.preventDefault(); switchToLogin(); });
+    window.addEventListener('resize', adjustViewportHeight);
+
+    // ── Login form submit ─────────────────────────────────────────────────────
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('login-submit-btn');
+      btn.textContent = 'Signing in…';
+      btn.disabled = true;
+
+      const usernameOrEmail = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value;
+
+      try {
+        const r = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usernameOrEmail, password })
+        });
+        const data = await r.json();
+        if (r.ok) {
+          window.location.href = '/dashboard';
+        } else {
+          showError(data.error || 'Login failed.');
+          btn.textContent = 'Sign in';
+          btn.disabled = false;
+        }
+      } catch {
+        showError('Unable to connect to server.');
+        btn.textContent = 'Sign in';
+        btn.disabled = false;
+      }
+    });
+
+    // ── Register form submit ──────────────────────────────────────────────────
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('register-submit-btn');
+      btn.textContent = 'Creating profile…';
+      btn.disabled = true;
+
+      const username = document.getElementById('register-username').value.trim();
+      const handle   = document.getElementById('register-handle').value.trim();
+      const email    = document.getElementById('register-email').value.trim();
+      const password = document.getElementById('register-password').value;
+
+      try {
+        const r = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, handle, email, password })
+        });
+        const data = await r.json();
+        if (r.ok) {
+          window.location.href = '/dashboard';
+        } else {
+          showError(data.error || 'Registration failed.');
+          btn.textContent = 'Create profile';
+          btn.disabled = false;
+        }
+      } catch {
+        showError('Unable to connect to server.');
+        btn.textContent = 'Create profile';
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

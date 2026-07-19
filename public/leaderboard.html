@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard ─ periish.lol</title>
+  <meta name="description" content="Top profiles and donors on periish.lol — ranked by views and donations.">
+  <link rel="icon" href="/assets/icons_favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    .leaderboard-wrapper {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 100px 24px 80px;
+      position: relative; z-index: 2;
+    }
+
+    .lb-hero {
+      text-align: center; margin-bottom: 48px;
+    }
+    .lb-hero-eyebrow {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--accent-color);
+      margin-bottom: 12px;
+    }
+    .lb-hero-title {
+      font-size: clamp(36px, 6vw, 56px); font-weight: 700; letter-spacing: -0.03em;
+      line-height: 1.1; margin-bottom: 16px;
+    }
+    .lb-hero-sub { font-size: 15px; color: var(--text-muted); max-width: 420px; margin: 0 auto; }
+
+    /* Tab switcher */
+    .lb-tabs {
+      display: flex; gap: 6px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 14px; padding: 5px;
+      margin-bottom: 32px;
+    }
+    .lb-tab {
+      flex: 1; padding: 10px 28px;
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 13px; font-weight: 600;
+      border-radius: 10px; transition: all 0.25s ease;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      font-family: inherit;
+    }
+    .lb-tab.active { background: rgba(255,255,255,0.07); color: #fff; }
+    .lb-tab svg { opacity: 0.6; }
+    .lb-tab.active svg { opacity: 1; }
+
+    /* Search */
+    .lb-search-wrap {
+      position: relative; width: 100%; max-width: 800px; margin-bottom: 20px;
+    }
+    .lb-search-icon {
+      position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+      opacity: 0.35; pointer-events: none;
+    }
+    .lb-search {
+      width: 100%; background: rgba(255,255,255,0.025);
+      border: 1px solid var(--border-color); border-radius: 12px;
+      padding: 12px 16px 12px 46px;
+      color: #fff; font-size: 14px; font-family: inherit; outline: none;
+      transition: all 0.2s ease;
+    }
+    .lb-search::placeholder { color: rgba(255,255,255,0.2); }
+    .lb-search:focus { border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.04); }
+
+    /* Card */
+    .lb-card {
+      width: 100%; max-width: 800px;
+      background: rgba(8,8,8,0.7);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      box-shadow: 0 40px 100px rgba(0,0,0,0.7);
+      overflow: hidden;
+    }
+
+    .lb-header-row {
+      display: grid;
+      grid-template-columns: 48px 1fr auto;
+      gap: 16px; align-items: center;
+      padding: 12px 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .lb-header-row span { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #444; }
+
+    /* Row */
+    .lb-row {
+      display: grid;
+      grid-template-columns: 48px 1fr auto;
+      gap: 16px; align-items: center;
+      padding: 14px 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      text-decoration: none; color: #fff;
+      transition: background 0.2s ease;
+      opacity: 0;
+      transform: translateY(12px);
+      animation: rowIn 0.4s var(--transition-snap) forwards;
+    }
+    @keyframes rowIn { to { opacity: 1; transform: translateY(0); } }
+    .lb-row:last-child { border-bottom: none; }
+    .lb-row:hover { background: rgba(255,255,255,0.03); }
+
+    .lb-rank {
+      font-size: 13px; font-weight: 800; text-align: center;
+      font-family: 'Unbounded', sans-serif;
+      color: #444;
+    }
+    .lb-rank-1 { color: #ffd700; font-size: 18px; }
+    .lb-rank-2 { color: #c0c0c0; font-size: 16px; }
+    .lb-rank-3 { color: #cd7f32; font-size: 15px; }
+
+    .lb-row-rank-1 { background: rgba(255,215,0,0.025); }
+    .lb-row-rank-2 { background: rgba(192,192,192,0.015); }
+    .lb-row-rank-3 { background: rgba(205,127,50,0.015); }
+
+    .lb-user { display: flex; align-items: center; gap: 14px; }
+    .lb-avatar {
+      width: 38px; height: 38px; border-radius: 50%; object-fit: cover;
+      border: 1px solid rgba(255,255,255,0.07); flex-shrink: 0;
+    }
+    .lb-names { display: flex; flex-direction: column; gap: 2px; }
+    .lb-display { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .lb-username { font-size: 12px; color: #555; }
+
+    .lb-stat {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 700; color: #fff;
+      white-space: nowrap;
+    }
+    .lb-stat svg { opacity: 0.4; }
+    .lb-stat-sub { font-size: 10px; color: #444; font-weight: 500; display: block; text-align: right; margin-top: 1px; }
+
+    /* Donor amount highlight */
+    .donor-amount { color: #ffd700; }
+    .donor-amount-large { font-size: 15px; font-weight: 800; font-family: 'Unbounded', sans-serif; color: #ffd700; }
+
+    /* Empty state */
+    .lb-empty { padding: 60px 24px; text-align: center; color: #444; font-size: 14px; }
+    .lb-empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.3; }
+
+    /* Badges inline */
+    .lb-badges { display: flex; gap: 4px; flex-wrap: wrap; }
+    .lb-badge {
+      font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+      padding: 2px 6px; border-radius: 4px;
+      background: rgba(255,255,255,0.04); color: #555; border: 1px solid rgba(255,255,255,0.06);
+    }
+    .lb-badge.verified { color: #35fe7e; border-color: rgba(53,254,126,0.2); background: rgba(53,254,126,0.04); }
+    .lb-badge.donor    { color: #ffd700; border-color: rgba(255,215,0,0.2);  background: rgba(255,215,0,0.04); }
+
+    /* Count badge */
+    .lb-count {
+      font-size: 12px; color: #444; text-align: center; padding: 16px;
+      border-top: 1px solid rgba(255,255,255,0.04);
+    }
+  </style>
+</head>
+<body>
+  <div class="landing-bg-container"></div>
+  <div class="bg-overlay-dark"></div>
+
+  <header>
+    <a href="/" class="logo-container">
+      <img src="/assets/logos_logo.svg" alt="Logo" class="logo-img">
+      <span class="logo-text font-unbounded">periish.lol</span>
+    </a>
+    <nav class="center-nav" id="main-nav">
+      <a href="/">Home</a>
+      <a href="/leaderboard" class="active">Leaderboard</a>
+      <a href="/shop">Shop</a>
+    </nav>
+    <div class="right-actions" id="header-btn-area"></div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <main class="leaderboard-wrapper">
+    <!-- Hero -->
+    <div class="lb-hero anim-fade-up">
+      <p class="lb-hero-eyebrow">periish.lol</p>
+      <h1 class="lb-hero-title font-unbounded">Leaderboard</h1>
+      <p class="lb-hero-sub">The most-visited profiles and top donors powering the platform.</p>
+    </div>
+
+    <!-- Tab switcher -->
+    <div class="lb-tabs anim-fade-up delay-1">
+      <button class="lb-tab active" id="tab-views" onclick="switchTab('views')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+        Profile Views
+      </button>
+      <button class="lb-tab" id="tab-donors" onclick="switchTab('donors')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
+        Top Donors
+      </button>
+    </div>
+
+    <!-- Search -->
+    <div class="lb-search-wrap anim-fade-up delay-2">
+      <span class="lb-search-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      </span>
+      <input type="text" class="lb-search" id="lb-search" placeholder="Search profiles…" oninput="filterList()">
+    </div>
+
+    <!-- Board card -->
+    <div class="lb-card anim-fade-up delay-3">
+      <div class="lb-header-row">
+        <span>#</span>
+        <span>User</span>
+        <span id="stat-header">Views</span>
+      </div>
+      <div id="lb-list">
+        <!-- rows populated by JS -->
+        <div class="lb-empty">
+          <div class="lb-empty-icon">⏳</div>
+          <div>Loading leaderboard…</div>
+        </div>
+      </div>
+      <div class="lb-count" id="lb-count"></div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer style="margin-top: 80px; border-top: 1px solid rgba(255,255,255,0.04); background: rgba(8,8,8,0.3); padding: 60px 0 30px; position: relative; z-index: 2; width: 100%;">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 0 24px;">
+      <div class="footer-grid">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <a href="/" class="logo-container"><img src="/assets/logos_logo.svg" class="logo-img" alt="Logo"><span class="logo-text font-unbounded">periish.lol</span></a>
+          <p style="color: var(--text-muted); font-size: 13px; line-height: 1.6; max-width: 280px;">Premium customizable link-in-bio profiles with music, widgets, analytics, and your own style.</p>
+        </div>
+        <div class="footer-links-grid">
+          <div><div class="footer-col-title">Explore</div><div class="footer-col-links"><a href="/shop">Shop</a><a href="/market">Market</a></div></div>
+          <div><div class="footer-col-title">Community</div><div class="footer-col-links"><a href="/leaderboard">Leaderboard</a><a href="/donors">Donors</a></div></div>
+          <div><div class="footer-col-title">Legal</div><div class="footer-col-links"><a href="/privacy">Privacy</a><a href="/terms">Terms</a></div></div>
+        </div>
+      </div>
+      <div style="border-top: 1px solid rgba(255,255,255,0.04); padding-top: 24px; margin-top: 40px;">
+        <p style="color: rgba(255,255,255,0.25); font-size: 12px;">© 2026 periish.lol. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    let currentTab = 'views';
+    let allData = [];
+
+    // ── Header auth ───────────────────────────────────────────────
+    fetch('/api/auth/me').then(r => r.json()).then(data => {
+      const area = document.getElementById('header-btn-area');
+      area.innerHTML = data.loggedIn
+        ? `<a href="/dashboard" class="btn-dashboard">Dashboard</a>`
+        : `<a href="/login" class="btn-dashboard">Log In</a>`;
+    });
+
+    // ── Hamburger ─────────────────────────────────────────────────
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.getElementById('main-nav').classList.toggle('open');
+    });
+
+    // ── Tab switching ─────────────────────────────────────────────
+    function switchTab(tab) {
+      currentTab = tab;
+      document.getElementById('tab-views').classList.toggle('active', tab === 'views');
+      document.getElementById('tab-donors').classList.toggle('active', tab === 'donors');
+      document.getElementById('lb-search').placeholder = tab === 'views' ? 'Search profiles…' : 'Search donors…';
+      document.getElementById('stat-header').textContent = tab === 'views' ? 'Views' : 'Donated';
+      loadData();
+    }
+
+    // ── Load data ─────────────────────────────────────────────────
+    async function loadData() {
+      const list = document.getElementById('lb-list');
+      list.innerHTML = `<div class="lb-empty"><div class="lb-empty-icon shimmer" style="width:40px;height:40px;border-radius:50%;margin:0 auto 12px;"></div><div class="shimmer" style="width:120px;height:14px;margin:0 auto;border-radius:4px;"></div></div>`;
+
+      const endpoint = currentTab === 'views' ? '/api/leaderboard' : '/api/leaderboard/donors';
+      try {
+        const r = await fetch(endpoint);
+        allData = await r.json();
+        renderList(allData);
+      } catch {
+        list.innerHTML = `<div class="lb-empty"><div class="lb-empty-icon">⚠</div><div style="color:#ff6060">Failed to load data.</div></div>`;
+      }
+    }
+
+    function filterList() {
+      const q = document.getElementById('lb-search').value.toLowerCase();
+      const filtered = allData.filter(p =>
+        p.username.includes(q) || (p.display_name || '').toLowerCase().includes(q)
+      );
+      renderList(filtered, true);
+    }
+
+    // ── Render ────────────────────────────────────────────────────
+    function renderList(data, filtered = false) {
+      const list = document.getElementById('lb-list');
+      const count = document.getElementById('lb-count');
+
+      if (!data || data.length === 0) {
+        list.innerHTML = `<div class="lb-empty"><div class="lb-empty-icon">🏆</div><div>${filtered ? 'No results.' : 'No data yet.'}</div></div>`;
+        count.textContent = '';
+        return;
+      }
+
+      if (currentTab === 'views') {
+        list.innerHTML = data.map((p, i) => renderViewsRow(p, i)).join('');
+      } else {
+        list.innerHTML = data.map((p, i) => renderDonorRow(p, i)).join('');
+      }
+
+      count.textContent = `Showing ${data.length} profiles`;
+    }
+
+    function badgeMarkup(badges) {
+      if (!badges?.length) return '';
+      return `<div class="lb-badges">` +
+        badges.filter(b => ['verified','donor','og','phantom'].includes(b))
+          .map(b => `<span class="lb-badge ${b}">${b}</span>`).join('') +
+        `</div>`;
+    }
+
+    function rankClass(rank) {
+      if (rank === 1) return 'lb-rank lb-rank-1';
+      if (rank === 2) return 'lb-rank lb-rank-2';
+      if (rank === 3) return 'lb-rank lb-rank-3';
+      return 'lb-rank';
+    }
+
+    function rankSymbol(rank) {
+      if (rank === 1) return '👑';
+      if (rank === 2) return '🥈';
+      if (rank === 3) return '🥉';
+      return rank;
+    }
+
+    function renderViewsRow(p, i) {
+      const rank = i + 1;
+      const isVerified = p.badges?.includes('verified');
+      const verifyIcon = isVerified ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="#35fe7e" style="filter:drop-shadow(0 0 3px rgba(53,254,126,0.5))"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>` : '';
+      const delayMs = Math.min(i * 50, 400);
+      const rowClass = rank <= 3 ? `lb-row lb-row-rank-${rank}` : 'lb-row';
+
+      return `
+        <a href="/${p.username}" class="${rowClass}" style="animation-delay:${delayMs}ms">
+          <div class="${rankClass(rank)}">${rankSymbol(rank)}</div>
+          <div class="lb-user">
+            <img src="${p.avatar_url || '/assets/default_avatar.png'}" class="lb-avatar" alt="${p.display_name}" onerror="this.src='/assets/default_avatar.png'">
+            <div class="lb-names">
+              <span class="lb-display">${p.display_name || p.username} ${verifyIcon}</span>
+              <span class="lb-username">@${p.username}</span>
+              ${badgeMarkup(p.badges)}
+            </div>
+          </div>
+          <div>
+            <div class="lb-stat">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+              ${(p.views || 0).toLocaleString()}
+            </div>
+            <span class="lb-stat-sub">views</span>
+          </div>
+        </a>`;
+    }
+
+    function renderDonorRow(p, i) {
+      const rank = i + 1;
+      const dollars = ((p.donated_amount || 0) / 100).toFixed(2);
+      const delayMs = Math.min(i * 50, 400);
+      const rowClass = rank <= 3 ? `lb-row lb-row-rank-${rank}` : 'lb-row';
+
+      return `
+        <a href="/${p.username}" class="${rowClass}" style="animation-delay:${delayMs}ms">
+          <div class="${rankClass(rank)}">${rankSymbol(rank)}</div>
+          <div class="lb-user">
+            <img src="${p.avatar_url || '/assets/default_avatar.png'}" class="lb-avatar" alt="${p.display_name}" onerror="this.src='/assets/default_avatar.png'">
+            <div class="lb-names">
+              <span class="lb-display">${p.display_name || p.username} <span class="lb-badge donor">donor</span></span>
+              <span class="lb-username">@${p.username}</span>
+            </div>
+          </div>
+          <div>
+            <div class="lb-stat donor-amount">
+              💛 $${dollars}
+            </div>
+            <span class="lb-stat-sub">donated</span>
+          </div>
+        </a>`;
+    }
+
+    // ── Auto-refresh every 60s ────────────────────────────────────
+    loadData();
+    setInterval(loadData, 60000);
+  </script>
+</body>
+</html>

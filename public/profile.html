@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile ─ periish.lol</title>
+  <link rel="icon" href="/assets/icons_favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+
+    .profile-wrapper {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      position: relative;
+    }
+
+    /* Base Containers */
+    .layout-card-container {
+      width: 100%;
+      max-width: 580px;
+      display: flex;
+      flex-direction: column;
+      gap: var(--grid-gap);
+    }
+
+    .layout-split-container {
+      width: 100%;
+      max-width: 960px;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    .layout-grid-container {
+      width: 100%;
+      max-width: 1100px;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: var(--grid-gap);
+    }
+
+    /* Widget Box container styles */
+    .widget-box {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 120px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .widget-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    /* Profile Widget specific */
+    .profile-header-widget {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+    }
+
+    .profile-avatar {
+      width: 80px; height: 80px; border-radius: 50%; object-fit: cover;
+      border: 2px solid var(--accent-color);
+      box-shadow: 0 0 0 4px var(--accent-glow), 0 4px 20px rgba(0,0,0,0.3);
+      transition: box-shadow 0.3s ease;
+    }
+    .profile-avatar:hover { box-shadow: 0 0 0 6px var(--accent-glow), 0 0 30px var(--accent-glow); }
+
+    .social-link-btn:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: var(--accent-color);
+      box-shadow: 0 0 12px var(--accent-glow);
+      transform: translateX(6px);
+    }
+    .social-link-btn:hover .social-link-arrow { color: var(--accent-color); transform: translateX(4px); }
+
+    .profile-name {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-color);
+    }
+
+    .profile-bio {
+      font-size: 14px;
+      color: var(--text-muted);
+      max-width: 420px;
+      line-height: 1.6;
+    }
+
+    .badge-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 4px;
+    }
+
+    .badge-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      padding: 4px 10px;
+      border-radius: 100px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--accent-color);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Social Links list */
+    .link-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .social-link-btn {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      color: var(--text-color);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .social-link-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateX(4px);
+    }
+
+    .social-link-arrow {
+      color: var(--text-muted);
+      font-size: 12px;
+      transition: transform 0.2s ease;
+    }
+
+    .social-link-btn:hover .social-link-arrow {
+      transform: translateX(2px);
+      color: var(--accent-color);
+    }
+
+    /* Spotify Card */
+    .spotify-widget {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      height: 80px;
+    }
+
+    /* Views widget */
+    .views-counter {
+      font-size: 32px;
+      font-weight: 700;
+      font-family: 'Unbounded', sans-serif;
+      color: var(--accent-color);
+    }
+
+    /* Overlay styles matching assets */
+    .overlay-screen {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 99;
+      background-size: cover;
+      background-position: center;
+      opacity: 0.04;
+    }
+
+    /* Music Player widget container */
+    .music-bar-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 50;
+    }
+
+    .music-player-panel {
+      padding: 12px 20px;
+      border-radius: 100px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .music-play-btn {
+      background: var(--text-color);
+      color: var(--bg-color);
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 10px;
+    }
+
+    /* Grid Layout dynamic positioning columns */
+    .grid-col-1 { grid-column: span 1; }
+    .grid-col-2 { grid-column: span 2; }
+    .grid-col-3 { grid-column: span 3; }
+    .grid-col-4 { grid-column: span 4; }
+    .grid-col-5 { grid-column: span 5; }
+    .grid-col-6 { grid-column: span 6; }
+  </style>
+</head>
+<body>
+  <!-- Dynamic Image/GIF background -->
+  <div class="bg-overlay" id="bg-overlay-image" style="display: none;"></div>
+  
+  <!-- Overlay Screen Effects -->
+  <div class="overlay-screen" id="overlay-effects"></div>
+
+  <div class="profile-wrapper">
+    <div id="profile-container">
+      <!-- Dynamically filled with widgets depending on layout type -->
+    </div>
+  </div>
+
+  <!-- Music Player floating widget -->
+  <div class="music-bar-container" id="music-player-container" style="display: none;">
+    <div class="music-player-panel glass-panel">
+      <button class="music-play-btn" id="music-toggle-btn">▶</button>
+      <span id="music-title">Soundtrack Playing</span>
+    </div>
+    <audio id="bg-audio" loop></audio>
+  </div>
+
+  <script>
+    // ── Fix: cleanly extract username from URL path, ignoring query strings
+    const username = window.location.pathname.replace(/^//, '').split('?')[0].split('/')[0].toLowerCase();
+    let isPlaying = false;
+    let audio = document.getElementById('bg-audio');
+
+    // ── Scroll-reveal observer
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); revealObserver.unobserve(e.target); } });
+    }, { threshold: 0.1 });
+
+    // Retrieve profile config
+    fetch(`/api/profile/public/${username}`)
+      .then(async r => {
+        if (!r.ok) {
+          window.location.href = '/';
+          return;
+        }
+        const profile = await r.json();
+        renderProfile(profile);
+      })
+      .catch(() => {
+        window.location.href = '/';
+      });
+
+    // Main Renderer
+    function renderProfile(profile) {
+      // 1. Set Custom Colors & Theme rules
+      const root = document.documentElement;
+      
+      // Load standard user colors
+      if (profile.colors) {
+        Object.keys(profile.colors).forEach(key => {
+          root.style.setProperty(`--${key.replace('_', '-')}`, profile.colors[key]);
+        });
+      }
+
+      // Universal Theme adjustments
+      if (profile.universal_theme === 'fully-dark') {
+        // Overwrite highlight accents to gray
+        root.style.setProperty('--accent-color', '#444444');
+        root.style.setProperty('--accent-glow', 'rgba(0, 0, 0, 0)');
+        // Deactivate text shadows
+        document.body.style.textShadow = 'none';
+      } else if (profile.universal_theme && profile.universal_theme !== 'subtle-white') {
+        // Hex color override
+        root.style.setProperty('--accent-color', profile.universal_theme);
+        // Custom glow
+        const r = parseInt(profile.universal_theme.slice(1, 3), 16);
+        const g = parseInt(profile.universal_theme.slice(3, 5), 16);
+        const b = parseInt(profile.universal_theme.slice(5, 7), 16);
+        root.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.15)`);
+      }
+
+      // 2. Set Background type
+      if (profile.background_type === 'image' && profile.background_url) {
+        const bgEl = document.getElementById('bg-overlay-image');
+        bgEl.style.backgroundImage = `url('${profile.background_url}')`;
+        bgEl.style.display = 'block';
+        
+        // Detect if background is a GIF to adjust opacity
+        if (profile.background_url.toLowerCase().endsWith('.gif')) {
+          bgEl.style.opacity = '0.2';
+        } else {
+          bgEl.style.opacity = '0.4';
+        }
+      }
+
+      // Load static overlay rain/cyberpunk effect dynamically
+      const overlayEl = document.getElementById('overlay-effects');
+      const randomOverlays = [
+        '/assets/overlays_noise.png', 
+        '/assets/overlays_dots.png',
+        '/assets/overlays_rain.gif'
+      ];
+      // Random subtle noise overlay
+      overlayEl.style.backgroundImage = `url('${randomOverlays[Math.floor(Math.random() * randomOverlays.length)]}')`;
+
+      // 3. Render layouts
+      const container = document.getElementById('profile-container');
+      container.innerHTML = '';
+      
+      let wrapper;
+
+      if (profile.layout_type === 'split') {
+        wrapper = document.createElement('div');
+        wrapper.className = 'layout-split-container';
+        
+        // Left Column (Profile card)
+        const leftCol = document.createElement('div');
+        leftCol.className = 'glass-panel widget-box';
+        leftCol.appendChild(createProfileHeader(profile));
+        wrapper.appendChild(leftCol);
+        if (profile.tilt_effect) {
+          apply3DTilt(leftCol);
+        }
+
+        // Right Column (Stacked widgets)
+        const rightCol = document.createElement('div');
+        rightCol.className = 'layout-card-container';
+        profile.widgets.forEach(w => {
+          if (w.type !== 'profile') {
+            rightCol.appendChild(createWidgetElement(w, profile));
+          }
+        });
+        wrapper.appendChild(rightCol);
+
+      } else if (profile.layout_type === 'grid') {
+        wrapper = document.createElement('div');
+        wrapper.className = 'layout-grid-container';
+        
+        profile.widgets.forEach(w => {
+          const el = createWidgetElement(w, profile);
+          el.classList.add(`grid-col-${w.w || 6}`);
+          wrapper.appendChild(el);
+          if (profile.tilt_effect && w.type === 'profile') {
+            apply3DTilt(el);
+          }
+        });
+
+      } else {
+        // Classic centered Card layout
+        wrapper = document.createElement('div');
+        wrapper.className = 'layout-card-container';
+        
+        // Push profile top card
+        const topCard = document.createElement('div');
+        topCard.className = 'glass-panel widget-box';
+        topCard.appendChild(createProfileHeader(profile));
+        wrapper.appendChild(topCard);
+        if (profile.tilt_effect) {
+          apply3DTilt(topCard);
+        }
+
+        // Push widgets below it
+        profile.widgets.forEach(w => {
+          if (w.type !== 'profile') {
+            wrapper.appendChild(createWidgetElement(w, profile));
+          }
+        });
+      }
+
+      container.appendChild(wrapper);
+
+      // Register all reveal elements
+      setTimeout(() => {
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+      }, 50);
+
+      // 4. Background music audio load
+      if (profile.music_url) {
+        audio.src = profile.music_url;
+        document.getElementById('music-player-container').style.display = 'block';
+        
+        const toggleBtn = document.getElementById('music-toggle-btn');
+        toggleBtn.addEventListener('click', () => {
+          if (isPlaying) {
+            audio.pause();
+            toggleBtn.innerText = '▶';
+          } else {
+            audio.play().catch(err => console.log("Audio play blocked by browser."));
+            toggleBtn.innerText = '⏸';
+          }
+          isPlaying = !isPlaying;
+        });
+
+        // Autoplay on first click anywhere on screen (browser limitation fallback)
+        document.addEventListener('click', () => {
+          if (!isPlaying && audio.src) {
+            audio.play().then(() => {
+              toggleBtn.innerText = '⏸';
+              isPlaying = true;
+            }).catch(() => {});
+          }
+        }, { once: true });
+      }
+    }
+
+    // Helper: 3D Parallax Mouse Tilt effect
+    function apply3DTilt(element) {
+      element.style.transition = 'transform 0.1s cubic-bezier(0.25, 1, 0.5, 1)';
+      element.style.transformStyle = 'preserve-3d';
+      element.style.willChange = 'transform';
+      
+      // Make children float at a separate depth layer
+      Array.from(element.children).forEach(child => {
+        child.style.transform = 'translateZ(20px)';
+        child.style.transformStyle = 'preserve-3d';
+      });
+      
+      element.addEventListener('mousemove', (e) => {
+        const rect = element.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rotateX = ((y - centerY) / centerY) * -10; // Max tilt 10 degrees
+        const rotateY = ((x - centerX) / centerX) * 10;
+        
+        element.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+      });
+      
+      element.addEventListener('mouseleave', () => {
+        element.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
+      });
+    }
+
+    // Helper: Profile Info Header card content
+    function createProfileHeader(profile) {
+      const header = document.createElement('div');
+      header.className = 'profile-header-widget';
+      
+      // Badges
+      let badgesMarkup = '';
+      if (profile.badges && profile.badges.length > 0) {
+        const otherBadges = profile.badges.filter(b => b !== 'verified');
+        if (otherBadges.length > 0) {
+          badgesMarkup = `<div class="badge-row">` + 
+            otherBadges.map(b => `<span class="badge-item">${b.replace('_', ' ')}</span>`).join('') + 
+            `</div>`;
+        }
+      }
+
+      const isVerified = profile.badges && profile.badges.includes('verified');
+      const verifyBadge = isVerified ? `
+        <span class="verify-badge" style="color: #35fe7e; display: inline-flex; align-items: center; margin-left: 6px; filter: drop-shadow(0 0 4px rgba(53, 254, 126, 0.35));">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </span>
+      ` : '';
+
+      header.innerHTML = `
+        <img src="${profile.avatar_url || '/assets/logos_logo.svg'}" class="profile-avatar" alt="${profile.display_name}">
+        <h2 class="profile-name font-unbounded text-glow" style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+          ${profile.display_name}
+          ${verifyBadge}
+        </h2>
+        ${badgesMarkup}
+        <p class="profile-bio">${profile.bio || ''}</p>
+      `;
+      return header;
+    }
+
+    // Helper: Dynamic Widget factory
+    function createWidgetElement(w, profile, index = 0) {
+      const box = document.createElement('div');
+      box.className = 'glass-panel widget-box reveal';
+      box.style.transitionDelay = `${index * 0.07}s`;
+
+      if (w.title) {
+        const title = document.createElement('div');
+        title.className = 'widget-title font-unbounded';
+        title.innerText = w.title;
+        box.appendChild(title);
+      }
+
+      const content = document.createElement('div');
+      content.style.flexGrow = '1';
+
+      if (w.type === 'profile') {
+        box.appendChild(createProfileHeader(profile));
+        return box;
+      }
+      
+      if (w.type === 'links' && w.links) {
+        const list = document.createElement('div');
+        list.className = 'link-list';
+        w.links.forEach(l => {
+          const btn = document.createElement('a');
+          btn.href = l.url;
+          btn.target = '_blank';
+          btn.className = 'social-link-btn';
+          btn.innerHTML = `
+            <span>${l.label}</span>
+            <span class="social-link-arrow">➔</span>
+          `;
+          list.appendChild(btn);
+        });
+        content.appendChild(list);
+
+      } else if (w.type === 'text') {
+        const txt = document.createElement('p');
+        txt.style.fontSize = '14px';
+        txt.style.lineHeight = '1.6';
+        txt.style.whiteSpace = 'pre-wrap';
+        txt.innerText = w.body || '';
+        content.appendChild(txt);
+
+      } else if (w.type === 'spotify' && w.embedUrl) {
+        // Convert regular track url to embed url if needed
+        let embed = w.embedUrl;
+        if (embed.includes('/track/') && !embed.includes('/embed/')) {
+          embed = embed.replace('/track/', '/embed/track/');
+        } else if (embed.includes('/playlist/') && !embed.includes('/embed/')) {
+          embed = embed.replace('/playlist/', '/embed/playlist/');
+        }
+        
+        const frame = document.createElement('iframe');
+        frame.src = embed;
+        frame.className = 'spotify-widget';
+        frame.width = '100%';
+        frame.allow = 'encrypted-media';
+        frame.style.border = 'none';
+        content.appendChild(frame);
+
+      } else if (w.type === 'badges') {
+        const row = document.createElement('div');
+        row.className = 'badge-row';
+        row.style.justifyContent = 'flex-start';
+        (profile.badges || ['early_access']).forEach(b => {
+          row.innerHTML += `<span class="badge-item">${b.replace('_', ' ')}</span>`;
+        });
+        content.appendChild(row);
+
+      } else if (w.type === 'views') {
+        const cnt = document.createElement('div');
+        cnt.className = 'views-counter text-glow';
+        cnt.innerText = profile.views || 1;
+        content.appendChild(cnt);
+        
+        const label = document.createElement('div');
+        label.style.fontSize = '11px';
+        label.style.color = 'var(--text-muted)';
+        label.innerText = 'Profile Views';
+        content.appendChild(label);
+      }
+
+      box.appendChild(content);
+      return box;
+    }
+  </script>
+</body>
+</html>
