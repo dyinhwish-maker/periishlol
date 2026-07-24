@@ -117,7 +117,16 @@
     .form-label { font-size: 12px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.06em; }
 
     /* Stats grid */
-    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    
+    .stat-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 16px; padding: 24px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .stat-card-label { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-card-value { font-size: 32px; font-weight: 700; color: #fff; font-family: 'Unbounded', sans-serif; }
+    .stat-card-change { font-size: 12px; font-weight: 600; color: var(--accent-color); }
 
     /* Color grid */
     .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -225,17 +234,32 @@
     /* Mobile */
     .mobile-topbar-btn { display: none; }
 
+    
     @media (max-width: 1200px) { .preview-pane { display: none; } }
     @media (max-width: 900px) {
-      .dash-sidebar { position: fixed; left: -100%; transition: left 0.3s ease; }
-      .dash-sidebar.open { left: 0; }
-      .dash-main { width: 100%; }
-      .mobile-topbar-btn { display: flex; }
-      .stats-grid { grid-template-columns: 1fr 1fr; }
-      .color-grid { grid-template-columns: 1fr 1fr; }
+      .dash-sidebar { width: 70px; min-width: 70px; }
+      .sidebar-brand span, .sidebar-user-info, .sidebar-section-label { display: none; }
+      .sidebar-item { justify-content: center; padding: 12px; }
+      .sidebar-item svg { margin: 0; }
+      .dash-main { width: calc(100% - 70px); }
+      .mobile-topbar-btn { display: none; }
+      
+    .stat-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 16px; padding: 24px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .stat-card-label { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-card-value { font-size: 32px; font-weight: 700; color: #fff; font-family: 'Unbounded', sans-serif; }
+    .stat-card-change { font-size: 12px; font-weight: 600; color: var(--accent-color); }
+
+    /* Color grid */
+    .color-grid { grid-template-columns: 1fr 1fr; }
       .form-row { grid-template-columns: 1fr; }
       .owned-items-grid { grid-template-columns: repeat(2, 1fr); }
     }
+
     @media (max-width: 600px) {
       .tab-panel { padding: 20px; }
       .stats-grid { grid-template-columns: 1fr; }
@@ -334,24 +358,24 @@
     <!-- ══ OVERVIEW TAB ══════════════════════════════════════════ -->
     <div class="tab-panel active" id="tab-overview">
       <div class="stats-grid">
-        <div class="stat-card">
+        <div class="stat-card glass-panel">
           <div class="stat-card-label">Profile Views</div>
           <div class="stat-card-value text-glow" id="stat-views">—</div>
           <div class="stat-card-change">All time</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card glass-panel">
           <div class="stat-card-label">Widgets</div>
           <div class="stat-card-value" id="stat-widgets">—</div>
           <div class="stat-card-change">Active</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card glass-panel">
           <div class="stat-card-label">Badges</div>
           <div class="stat-card-value" id="stat-badges">—</div>
           <div class="stat-card-change">Collected</div>
         </div>
       </div>
 
-      <div class="config-card">
+      <div class="config-card glass-panel">
         <div class="config-card-title">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="opacity:.6"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
           Your Profile
@@ -366,7 +390,7 @@
         </div>
       </div>
 
-      <div class="config-card">
+      <div class="config-card glass-panel">
         <div class="config-card-title">Quick Actions</div>
         <div style="display:flex;flex-wrap:wrap;gap:10px;">
           <button class="btn-secondary" onclick="switchTab('edit')" style="font-size:13px;padding:8px 16px;">✏️ Edit Profile</button>
@@ -379,7 +403,7 @@
 
     <!-- ══ EDIT PROFILE TAB ══════════════════════════════════════ -->
     <div class="tab-panel" id="tab-edit">
-      <div class="config-card">
+      <div class="config-card glass-panel">
         <div class="config-card-title">Profile Picture</div>
         <div style="display:flex;gap:16px;align-items:center;">
           <img id="avatar-preview" src="/assets/default_avatar.png" style="width:64px;height:64px;border-radius:50%;border:2px solid var(--accent-color);object-fit:cover;">
@@ -391,7 +415,7 @@
         </div>
       </div>
 
-      <div class="config-card">
+      <div class="config-card glass-panel">
         <div class="config-card-title">Basic Information</div>
         <div style="display:flex;flex-direction:column;gap:16px;">
           <div class="form-group">
@@ -405,7 +429,7 @@
         </div>
       </div>
 
-      <div class="config-card">
+      <div class="config-card glass-panel">
         <div class="config-card-title">SEO & Metadata</div>
         <div style="display:flex;flex-direction:column;gap:16px;">
           <div class="form-group">
@@ -419,7 +443,7 @@
         </div>
       </div>
 
-      <div class="config-card">
+      <div class="config-card glass-panel">
         <div class="config-card-title">
           <svg width="16" height="16" viewBox="0 0 71 55" fill="#5865F2"><path d="M60.1 4.9A58.5 58.5 0 0045.7.7a40.7 40.7 0 00-1.8 3.7 54 54 0 00-16.3 0A39.8 39.8 0 0025.9.7 58.4 58.4 0 0011.5 4.9C1.7 19.7-1 34.1.3 48.3a59 59 0 0018 9.1 43.5 43.5 0 003.8-6.2 38.3 38.3 0 01-6-2.9l1.5-1.1a42 42 0 0036.1 0l1.5 1.1a38.3 38.3 0 01-6 2.9 43.5 43.5 0 003.8 6.2 58.8 58.8 0 0018-9.1C72.2 32 68.6 17.7 60.1 4.9zM23.7 39.7c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.5 0 6.4 3.2 6.3 7.2 0 4-2.8 7.2-6.3 7.2zm23.6 0c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.5 0 6.4 3.2 6.3 7.2 0 4-2.8 7.2-6.3 7.2z"/></svg>
           Discord Account
@@ -444,7 +468,7 @@
 
     <!-- ══ WIDGETS TAB ══════════════════════════════════════════ -->
     <div class="tab-panel" id="tab-widgets">
-      <div class="config-card">
+      <div class="config-card glass-panel">
         <div class="config-card-title" style="justify-content:space-between;display:flex;align-items:center;">
           <span>Widgets</span>
           <button class="btn-accent" id="add-widget-btn" style="padding:6px 14px;font-size:12px;">+ Add Widget</button>
@@ -452,7 +476,7 @@
         <div class="widget-list" id="widget-list"></div>
       </div>
 
-      <div class="config-card">
+      <div class="config-card glass-panel">
         <div class="config-card-title">Layout Template</div>
         <div class="layout-picker">
           <div class="layout-option" data-layout="card">
@@ -470,7 +494,7 @@
         </div>
       </div>
 
-      <div class="config-card">
+      <div class="config-card glass-panel">
         <div class="config-card-title">Background Music</div>
         <div class="form-group">
           <label class="form-label">SoundCloud / Direct Audio URL</label>
@@ -481,7 +505,7 @@
 
     <!-- ══ STYLE TAB ════════════════════════════════════════════ -->
     <div class="tab-panel" id="tab-style">
-      <div class="config-card">
+      <div class="config-card glass-panel">
         <div class="config-card-title">Universal Theme</div>
         <div class="form-group">
           <label class="form-label">Theme Preset</label>
@@ -515,7 +539,7 @@
         </div>
       </div>
 
-      <div class="config-card">
+      <div class="config-card glass-panel">
         <div class="config-card-title">Background</div>
         <div style="display:flex;flex-direction:column;gap:16px;">
           <div class="form-group">
@@ -536,7 +560,7 @@
         </div>
       </div>
 
-      <div class="config-card">
+      <div class="config-card glass-panel">
         <div class="config-card-title">Overlay Effects</div>
         <div class="overlay-grid">
           <div class="overlay-option active" data-overlay="" onclick="setOverlay(this, '')">
@@ -566,7 +590,7 @@
         </div>
       </div>
 
-      <div class="config-card">
+      <div class="config-card glass-panel">
         <div class="config-card-title">Color Palette</div>
         <div class="color-grid">
           <div class="color-item"><input type="color" id="col-bg" class="color-picker"><span class="color-label">Background</span></div>
@@ -578,7 +602,7 @@
         </div>
       </div>
 
-      <div class="config-card">
+      <div class="config-card glass-panel">
         <div class="config-card-title">Font</div>
         <div class="form-group">
           <label class="form-label">Profile Font</label>
@@ -596,12 +620,12 @@
     <!-- ══ ANALYTICS TAB ════════════════════════════════════════ -->
     <div class="tab-panel" id="tab-analytics">
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-card-label">Total Views</div><div class="stat-card-value text-glow" id="an-views">—</div></div>
-        <div class="stat-card"><div class="stat-card-label">This Month</div><div class="stat-card-value">—</div><div class="stat-card-change">Coming soon</div></div>
-        <div class="stat-card"><div class="stat-card-label">Leaderboard Rank</div><div class="stat-card-value" id="an-rank">#—</div></div>
+        <div class="stat-card glass-panel"><div class="stat-card-label">Total Views</div><div class="stat-card-value text-glow" id="an-views">—</div></div>
+        <div class="stat-card glass-panel"><div class="stat-card-label">This Month</div><div class="stat-card-value">—</div><div class="stat-card-change">Coming soon</div></div>
+        <div class="stat-card glass-panel"><div class="stat-card-label">Leaderboard Rank</div><div class="stat-card-value" id="an-rank">#—</div></div>
       </div>
 
-      <div class="config-card">
+      <div class="config-card glass-panel">
         <div class="config-card-title">Views Over Time</div>
         <div class="analytics-chart-placeholder">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="rgba(255,255,255,0.1)"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
@@ -610,7 +634,7 @@
         </div>
       </div>
 
-      <div class="config-card">
+      <div class="config-card glass-panel">
         <div class="config-card-title">Leaderboard Position</div>
         <div id="lb-position-display" style="color:#555;font-size:14px;">Loading…</div>
       </div>
@@ -618,13 +642,13 @@
 
     <!-- ══ BADGES TAB ═════════════════════════════════════════════ -->
     <div class="tab-panel" id="tab-store">
-      <div class="config-card">
+      <div class="config-card glass-panel">
         <div class="config-card-title">Your Badges</div>
         <div class="owned-items-grid" id="owned-badges-grid">
           <div style="color:#444;font-size:13px;grid-column:1/-1;">Loading…</div>
         </div>
       </div>
-      <div class="config-card">
+      <div class="config-card glass-panel">
         <div class="config-card-title" style="justify-content:space-between;display:flex;align-items:center;">
           <span>Get More Badges</span>
           <a href="/shop" class="btn-accent" style="text-decoration:none;padding:7px 16px;font-size:13px;">Visit Shop →</a>
@@ -635,7 +659,7 @@
 
     <!-- ══ SETTINGS TAB ══════════════════════════════════════════ -->
     <div class="tab-panel" id="tab-settings">
-      <div class="config-card">
+      <div class="config-card glass-panel">
         <div class="config-card-title">Account Info</div>
         <div style="display:flex;flex-direction:column;gap:14px;">
           <div><div class="form-label">Username (URL Slug)</div><div style="font-size:14px;font-family:monospace;color:#aaa;margin-top:4px;" id="set-username">—</div></div>
@@ -645,7 +669,7 @@
         </div>
       </div>
 
-      <div class="config-card" style="border-color:rgba(255,74,74,0.2);">
+      <div class="config-card glass-panel" style="border-color:rgba(255,74,74,0.2);">
         <div class="config-card-title" style="color:#ff6060;">Danger Zone</div>
         <p style="font-size:13px;color:#555;margin-bottom:16px;">Actions here are permanent. Please be careful.</p>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
